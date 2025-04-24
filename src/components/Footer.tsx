@@ -17,8 +17,8 @@ const Footer = () => {
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/" className="text-gray-600 hover:text-pink text-sm">
-                  Home
+                <Link to="/about" className="text-gray-600 hover:text-pink text-sm">
+                  Sobre o App
                 </Link>
               </li>
               <li>
@@ -31,13 +31,33 @@ const Footer = () => {
                   Login / Cadastro
                 </Link>
               </li>
+              <li>
+                <Link to="/terms" className="text-gray-600 hover:text-pink text-sm">
+                  Termos de Uso
+                </Link>
+              </li>
+              <li>
+                <Link to="/privacy" className="text-gray-600 hover:text-pink text-sm">
+                  Política de Privacidade
+                </Link>
+              </li>
             </ul>
           </div>
           
           <div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Contato</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Suporte</h3>
             <p className="text-gray-600 text-sm mb-2">contato@cuide-se.com</p>
             <p className="text-gray-600 text-sm">(11) 99999-9999</p>
+            <button 
+              onClick={() => {
+                const url = window.location.origin;
+                navigator.clipboard.writeText(url);
+                alert('Link copiado! Compartilhe com suas amigas!');
+              }}
+              className="mt-4 text-pink hover:text-pink/90 text-sm font-medium"
+            >
+              Indique uma amiga
+            </button>
           </div>
         </div>
         
