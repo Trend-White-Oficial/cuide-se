@@ -1,7 +1,7 @@
 
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { UserCircle } from "lucide-react";
+import { UserCircle, Settings } from "lucide-react";
 
 const Header = () => {
   // Simular usuário logado ou não
@@ -33,13 +33,21 @@ const Header = () => {
                 </Link>
               </li>
             ) : (
-              <li>
-                <Link to="/login">
-                  <Button className="bg-pink hover:bg-pink/90 text-white">
-                    Login / Cadastro
-                  </Button>
-                </Link>
-              </li>
+              <>
+                <li>
+                  <Link to="/login">
+                    <Button className="bg-pink hover:bg-pink/90 text-white">
+                      Login / Cadastro
+                    </Button>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/admin/login" className="text-gray-500 text-sm hover:text-pink flex items-center">
+                    <Settings size={14} className="mr-1" />
+                    Área Admin
+                  </Link>
+                </li>
+              </>
             )}
           </ul>
         </nav>
