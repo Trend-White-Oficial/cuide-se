@@ -47,21 +47,19 @@ npm run dev
 ```
 
 ## 🏗️ Estrutura do Projeto
-
-```
 src/
-├── components/         # Componentes React
-│   ├── layout/        # Componentes de layout
-│   ├── features/      # Componentes específicos de funcionalidades
-│   └── shared/        # Componentes reutilizáveis
-├── pages/             # Páginas da aplicação
-├── hooks/             # Hooks personalizados
-├── services/          # Serviços de API
-├── utils/             # Funções utilitárias
-├── types/             # Tipos TypeScript
-├── constants/         # Constantes
-└── styles/            # Estilos globais
-```
+├── components/ # Componentes React
+│ ├── layout/ # Componentes de layout
+│ ├── features/ # Componentes específicos de funcionalidades
+│ └── shared/ # Componentes reutilizáveis
+├── pages/ # Páginas da aplicação
+├── hooks/ # Hooks personalizados
+├── services/ # Serviços de API
+├── utils/ # Funções utilitárias
+├── types/ # Tipos TypeScript
+├── constants/ # Constantes
+└── styles/ # Estilos globais
+
 
 ## 🔧 Configuração
 
@@ -138,7 +136,6 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 ## 👥 Equipe
 
 - Desenvolvedor 1 - [@usuario1](https://github.com/Trend-White-Oficial)
-
 
 ## 📞 Suporte
 

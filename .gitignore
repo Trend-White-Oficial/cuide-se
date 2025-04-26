@@ -15,6 +15,9 @@ build
 .env.development.local
 .env.test.local
 .env.production.local
+.env.development
+.env.production
+.env.*.local
 
 # Logs
 logs
@@ -25,7 +28,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Editor
+# Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -48,11 +51,4 @@ coverage
 
 # Outros
 *.pem
-.DS_Store
 Thumbs.db
-
-# Environment variables
-.env.development
-.env.production
-.env.local
-.env.*.local

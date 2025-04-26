@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
+<<<<<<< HEAD
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error('Failed to find the root element');
 
@@ -18,3 +19,6 @@ try {
     </div>
   );
 }
+=======
+createRoot(document.getElementById("root")!).render(<App />);
+>>>>>>> 31a9e08cc82b0539daf1062986390a8a12792fd8
