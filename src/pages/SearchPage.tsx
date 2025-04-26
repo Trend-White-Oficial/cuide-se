@@ -1,9 +1,8 @@
-
 import { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { mockProfessionals } from '@/data/mockData';
-import ProfessionalCard from '@/components/ProfessionalCard';
+import { ProfessionalCard } from '@/components/ProfessionalCard';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Professional } from '@/types';
@@ -27,7 +26,7 @@ const SearchPage = () => {
                             professional.specialty === selectedSpecialty;
     
     const matchesSearch = professional.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         professional.location.toLowerCase().includes(searchTerm.toLowerCase());
+                         professional.location?.toLowerCase().includes(searchTerm.toLowerCase());
     
     return matchesSpecialty && matchesSearch;
   });

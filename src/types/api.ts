@@ -39,6 +39,7 @@ export interface Professional extends User {
       end: string;
     };
   };
+  paymentMethods?: string[];
 }
 
 export interface Service {

@@ -130,6 +130,14 @@ const ProfilePage = () => {
                         </div>
                       </div>
                     </div>
+                    <a
+                      href="https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=2c9380849672de3a019672f371350004"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block mt-4 px-6 py-3 bg-pink text-white font-bold rounded hover:bg-pink/90 transition"
+                    >
+                      Assinar Mensalidade Profissional
+                    </a>
                   </CardContent>
                 </Card>
               </div>

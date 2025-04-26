@@ -45,11 +45,13 @@ const Footer = () => {
           
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Contato</h3>
-            <p className="text-gray-600 text-sm mb-2">contato@cuide-se.com</p>
+            <p className="text-gray-600 text-sm mb-2">cuide.se.ame@gmail.com</p>
             <p className="text-gray-600 text-sm">(11) 91753-6971</p>
             <div className="mt-4">
               <h4 className="text-sm font-semibold text-gray-800 mb-2">Suporte</h4>
-              <p className="text-gray-600 text-sm">Indique sua amiga</p>
+              <Link to="/indique" className="text-gray-600 text-sm underline hover:text-pink transition">
+                Indique sua amiga
+              </Link>
               <Link to="/support" className="text-pink hover:text-pink/80 text-sm">
                 Fale com nosso suporte
               </Link>

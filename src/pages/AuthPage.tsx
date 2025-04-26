@@ -1,8 +1,5 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/components/ui/use-toast';
+import { signIn, signUp } from '@/services/auth';
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -18,6 +16,7 @@ const AuthPage = () => {
   // Estado para formulário de login
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   
   // Estado para formulário de cadastro
   const [name, setName] = useState('');
@@ -28,58 +27,74 @@ const AuthPage = () => {
   const [location, setLocation] = useState('');
   const [userRole, setUserRole] = useState<'client' | 'professional'>('client');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    // Simulação de login
-    if (loginEmail && loginPassword) {
+    try {
+      if (!loginEmail || !loginPassword) {
+        throw new Error('Por favor, preencha todos os campos');
+      }
+
+      await signIn(loginEmail, loginPassword);
+      
       toast({
         title: "Login realizado com sucesso!",
       });
       navigate('/profile');
-    } else {
+    } catch (error: any) {
       toast({
         title: "Erro ao fazer login",
-        description: "Por favor, preencha todos os campos",
+        description: error.message || "Ocorreu um erro ao fazer login",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
   
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    // Validação básica
-    if (!name || !email || !phone || !password || !location) {
+    try {
+      // Validação básica
+      if (!name || !email || !phone || !password || !location) {
+        throw new Error('Por favor, preencha todos os campos obrigatórios');
+      }
+      
+      if (password !== confirmPassword) {
+        throw new Error('As senhas não coincidem');
+      }
+
+      const userData = {
+        name,
+        email,
+        phone,
+        location,
+        role: userRole
+      };
+      
+      await signUp(userData, password);
+      
+      toast({
+        title: "Conta criada com sucesso!",
+        description: `Bem-vindo(a) ao Cuide-Se, ${name}!`,
+      });
+      navigate('/profile');
+    } catch (error: any) {
       toast({
         title: "Erro ao criar conta",
-        description: "Por favor, preencha todos os campos obrigatórios",
+        description: error.message || "Ocorreu um erro ao criar sua conta",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setIsLoading(false);
     }
-    
-    if (password !== confirmPassword) {
-      toast({
-        title: "Erro ao criar conta",
-        description: "As senhas não coincidem",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Simulação de cadastro
-    toast({
-      title: "Conta criada com sucesso!",
-      description: `Bem-vindo(a) ao Cuide-Se, ${name}!`,
-    });
-    navigate('/profile');
   };
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
-      
       <main className="flex-grow bg-gray-50 py-12">
         <div className="container mx-auto px-6">
           <div className="max-w-md mx-auto">
@@ -111,6 +126,7 @@ const AuthPage = () => {
                           placeholder="seu@email.com"
                           value={loginEmail}
                           onChange={(e) => setLoginEmail(e.target.value)}
+                          disabled={isLoading}
                         />
                       </div>
                       
@@ -122,11 +138,16 @@ const AuthPage = () => {
                           placeholder="••••••••"
                           value={loginPassword}
                           onChange={(e) => setLoginPassword(e.target.value)}
+                          disabled={isLoading}
                         />
                       </div>
                       
-                      <Button type="submit" className="w-full bg-pink hover:bg-pink/90">
-                        Entrar
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-pink hover:bg-pink/90"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? "Entrando..." : "Entrar"}
                       </Button>
                     </form>
                   </CardContent>
@@ -147,6 +168,7 @@ const AuthPage = () => {
                         defaultValue={userRole}
                         className="flex justify-center space-x-6 mb-4"
                         onValueChange={(value) => setUserRole(value as 'client' | 'professional')}
+                        disabled={isLoading}
                       >
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="client" id="client" />
@@ -164,6 +186,7 @@ const AuthPage = () => {
                           id="name" 
                           value={name}
                           onChange={(e) => setName(e.target.value)}
+                          disabled={isLoading}
                         />
                       </div>
                       
@@ -174,6 +197,7 @@ const AuthPage = () => {
                           type="email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
+                          disabled={isLoading}
                         />
                       </div>
                       
@@ -183,6 +207,7 @@ const AuthPage = () => {
                           id="phone" 
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
+                          disabled={isLoading}
                         />
                       </div>
                       
@@ -193,6 +218,7 @@ const AuthPage = () => {
                           placeholder="São Paulo, SP"
                           value={location}
                           onChange={(e) => setLocation(e.target.value)}
+                          disabled={isLoading}
                         />
                       </div>
                       
@@ -204,6 +230,7 @@ const AuthPage = () => {
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            disabled={isLoading}
                           />
                         </div>
                         <div className="space-y-2">
@@ -213,6 +240,7 @@ const AuthPage = () => {
                             type="password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
+                            disabled={isLoading}
                           />
                         </div>
                       </div>
@@ -223,8 +251,12 @@ const AuthPage = () => {
                         </div>
                       )}
                       
-                      <Button type="submit" className="w-full bg-pink hover:bg-pink/90">
-                        Criar conta
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-pink hover:bg-pink/90"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? "Criando conta..." : "Criar conta"}
                       </Button>
                     </form>
                   </CardContent>
@@ -234,8 +266,6 @@ const AuthPage = () => {
           </div>
         </div>
       </main>
-      
-      <Footer />
     </div>
   );
 };

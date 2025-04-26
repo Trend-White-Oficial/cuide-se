@@ -4,10 +4,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Suspense, lazy } from "react";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { LoadingFallback } from "@/components/ui/loading";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import Indique from './pages/Indique';
 
 // Lazy loading das páginas
 const Home = lazy(() => import("./pages/Home"));
@@ -55,6 +56,7 @@ const App = () => (
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/support" element={<SupportPage />} />
+                <Route path="/indique" element={<Indique />} />
                 <Route
                   path="/profile"
                   element={
@@ -66,7 +68,7 @@ const App = () => (
                 <Route
                   path="/admin"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute requireProfessional>
                       <DashboardPage />
                     </ProtectedRoute>
                   }
@@ -74,7 +76,7 @@ const App = () => (
                 <Route
                   path="/admin/users"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute requireProfessional>
                       <UsersPage />
                     </ProtectedRoute>
                   }
@@ -82,7 +84,7 @@ const App = () => (
                 <Route
                   path="/admin/professionals"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute requireProfessional>
                       <ProfessionalsPage />
                     </ProtectedRoute>
                   }
@@ -90,7 +92,7 @@ const App = () => (
                 <Route
                   path="/admin/appointments"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute requireProfessional>
                       <AppointmentsPage />
                     </ProtectedRoute>
                   }
@@ -98,7 +100,7 @@ const App = () => (
                 <Route
                   path="/admin/settings"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute requireProfessional>
                       <SettingsPage />
                     </ProtectedRoute>
                   }

@@ -11,8 +11,8 @@ const SettingsPage = () => {
   const [settings, setSettings] = useState({
     siteName: 'Cuide-se',
     siteDescription: 'Plataforma de agendamento de serviços de saúde e bem-estar',
-    contactEmail: 'contato@cuide-se.com.br',
-    supportPhone: '(11) 99999-9999',
+    contactEmail: 'cuide.se.ame@gmail.com',
+    supportPhone: '(11) 91753-6971',
     enableNotifications: true,
     enableEmailNotifications: true,
     maintenanceMode: false,

@@ -1,19 +1,31 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requireProfessional?: boolean;
 }
 
-export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  // TODO: Implementar lógica de autenticação
-  const isAuthenticated = true; // Temporariamente sempre true para desenvolvimento
-  const isAdmin = true; // Temporariamente sempre true para desenvolvimento
+export const ProtectedRoute = ({ 
+  children, 
+  requireProfessional = false 
+}: ProtectedRouteProps) => {
+  const { user, userData, loading } = useAuth();
+  const location = useLocation();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink"></div>
+      </div>
+    );
   }
 
-  if (!isAdmin) {
+  if (!user) {
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  if (requireProfessional && userData?.role !== 'professional') {
     return <Navigate to="/" replace />;
   }
 

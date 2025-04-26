@@ -73,7 +73,7 @@ const TermsPage = () => {
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">9. Contato</h2>
               <p className="text-gray-600 mb-4">
-                Se você tiver alguma dúvida sobre estes termos, entre em contato conosco através do email contato@cuide-se.com.br.
+                Se você tiver alguma dúvida sobre estes termos, entre em contato conosco através do email cuide.se.ame@gmail.com.
               </p>
             </section>
           </div>

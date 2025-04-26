@@ -65,7 +65,7 @@ export function ProfessionalDetails({ professional }: ProfessionalDetailsProps) 
               <div>
                 <h2 className="font-semibold mb-4">Formas de Pagamento</h2>
                 <div className="flex flex-wrap gap-2">
-                  {professional.paymentMethods.map((method) => (
+                  {(professional.paymentMethods ?? []).map((method: string) => (
                     <Badge key={method} variant="outline">{method}</Badge>
                   ))}
                 </div>
