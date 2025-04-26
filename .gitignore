@@ -1,0 +1,58 @@
+# Dependências
+node_modules
+.pnp
+.pnp.js
+
+# Build
+dist
+dist-ssr
+*.local
+build
+
+# Ambiente
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Testes
+coverage
+.nyc_output
+
+# Cache
+.cache
+.temp
+.eslintcache
+.stylelintcache
+
+# Outros
+*.pem
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env.development
+.env.production
+.env.local
+.env.*.local
