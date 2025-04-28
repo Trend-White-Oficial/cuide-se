@@ -1,1 +1,2 @@
-export default function HomeScreen(): import("react/jsx-runtime").JSX.Element;
+declare const HomeScreen: () => import("react/jsx-runtime").JSX.Element;
+export default HomeScreen;

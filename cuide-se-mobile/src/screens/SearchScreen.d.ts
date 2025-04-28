@@ -1,1 +1,2 @@
-export default function SearchScreen(): import("react/jsx-runtime").JSX.Element;
+declare const SearchScreen: () => import("react/jsx-runtime").JSX.Element;
+export default SearchScreen;

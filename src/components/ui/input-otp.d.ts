@@ -1,5 +1,5 @@
 import * as React from "react";
-declare const InputOTP: React.ForwardRefExoticComponent<(Omit<Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "textAlign" | "onChange" | "maxLength" | "onComplete" | "pushPasswordManagerStrategy" | "pasteTransformer" | "containerClassName" | "noScriptCSSFallback"> & {
+declare const InputOTP: React.ForwardRefExoticComponent<(Omit<Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "textAlign" | "maxLength" | "onChange" | "onComplete" | "pushPasswordManagerStrategy" | "pasteTransformer" | "containerClassName" | "noScriptCSSFallback"> & {
     value?: string;
     onChange?: (newValue: string) => unknown;
     maxLength: number;
@@ -12,7 +12,7 @@ declare const InputOTP: React.ForwardRefExoticComponent<(Omit<Omit<React.InputHT
 } & {
     render: (props: import("input-otp").RenderProps) => React.ReactNode;
     children?: never;
-} & React.RefAttributes<HTMLInputElement>, "ref"> | Omit<Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "textAlign" | "onChange" | "maxLength" | "onComplete" | "pushPasswordManagerStrategy" | "pasteTransformer" | "containerClassName" | "noScriptCSSFallback"> & {
+} & React.RefAttributes<HTMLInputElement>, "ref"> | Omit<Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "textAlign" | "maxLength" | "onChange" | "onComplete" | "pushPasswordManagerStrategy" | "pasteTransformer" | "containerClassName" | "noScriptCSSFallback"> & {
     value?: string;
     onChange?: (newValue: string) => unknown;
     maxLength: number;
