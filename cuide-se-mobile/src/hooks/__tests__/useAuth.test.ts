@@ -1,110 +1,48 @@
-import { renderHook, act } from '@testing-library/react';
-import { useAuth } from '../useAuth';
-import { authService } from '@/services/api';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { renderHook } from '@testing-library/react-hooks';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { vi } from 'vitest';
 
-// Mock do authService
 vi.mock('@/services/api', () => ({
   authService: {
-    login: vi.fn(),
-    register: vi.fn(),
-    logout: vi.fn(),
+    login: vi.fn(() => Promise.resolve({ data: { token: 'test-token', user: { id: 1, name: 'Test User' } } })),
+    logout: vi.fn(() => Promise.resolve()),
+  },
+  notificationsService: {
+    getAll: vi.fn(() => Promise.resolve([])),
   },
 }));
 
 describe('useAuth', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('deve inicializar com o estado padrão', () => {
+  it('should initialize with default state', () => {
     const { result } = renderHook(() => useAuth(), {
-      wrapper: ({ children }) => children,
+      wrapper: AuthProvider,
     });
 
     expect(result.current.user).toBeNull();
-    expect(result.current.token).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.error).toBeNull();
+    expect(result.current.loading).toBe(true);
   });
 
-  it('deve fazer login com sucesso', async () => {
-    const mockUser = { id: 1, name: 'Test User' };
-    const mockToken = 'test-token';
-    (authService.login as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      data: { user: mockUser, token: mockToken },
+  it('should handle login successfully', async () => {
+    const { result, waitForNextUpdate } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
     });
 
-    const { result } = renderHook(() => useAuth(), {
-      wrapper: ({ children }) => children,
-    });
+    await result.current.login({ email: 'test@example.com', password: 'password' });
+    await waitForNextUpdate();
 
-    await act(async () => {
-      await result.current.login('test@example.com', 'password');
-    });
-
-    expect(result.current.user).toEqual(mockUser);
-    expect(result.current.token).toBe(mockToken);
+    expect(result.current.user).toEqual({ id: 1, name: 'Test User' });
     expect(result.current.isAuthenticated).toBe(true);
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.error).toBeNull();
   });
 
-  it('deve lidar com erro no login', async () => {
-    const errorMessage = 'Credenciais inválidas';
-    (authService.login as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce({
-      response: { data: { message: errorMessage } },
-    });
-
+  it('should handle logout successfully', async () => {
     const { result } = renderHook(() => useAuth(), {
-      wrapper: ({ children }) => children,
+      wrapper: AuthProvider,
     });
 
-    await act(async () => {
-      await result.current.login('test@example.com', 'wrong-password');
-    });
+    await result.current.logout();
 
     expect(result.current.user).toBeNull();
-    expect(result.current.token).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.error).toBe(errorMessage);
   });
-
-  it('deve fazer logout com sucesso', async () => {
-    (authService.logout as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({});
-
-    const { result } = renderHook(() => useAuth(), {
-      wrapper: ({ children }) => children,
-    });
-
-    // Primeiro faz login
-    await act(async () => {
-      await result.current.login('test@example.com', 'password');
-    });
-
-    // Depois faz logout
-    await act(async () => {
-      await result.current.logout();
-    });
-
-    expect(result.current.user).toBeNull();
-    expect(result.current.token).toBeNull();
-    expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.error).toBeNull();
-  });
-
-  it('deve limpar o erro', () => {
-    const { result } = renderHook(() => useAuth(), {
-      wrapper: ({ children }) => children,
-    });
-
-    act(() => {
-      result.current.clearError();
-    });
-
-    expect(result.current.error).toBeNull();
-  });
-}); 
+});

@@ -122,4 +122,8 @@ export const serviceService = {
   delete: (id: string) => api.delete<ApiResponse<void>>(`/services/${id}`),
 };
 
-export { api }; 
+export const notificationsService = {
+  getAll: () => Promise.resolve([]),
+};
+
+export { api };

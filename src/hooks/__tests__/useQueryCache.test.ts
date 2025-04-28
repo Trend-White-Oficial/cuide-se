@@ -1,19 +1,26 @@
 import { renderHook, act } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useQueryCache } from '../useQueryCache';
+
+const queryClient = new QueryClient();
 
 describe('useQueryCache', () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+
   it('deve inicializar com cache vazio', () => {
-    const { result } = renderHook(() => useQueryCache());
+    const { result } = renderHook(() => useQueryCache(), { wrapper });
 
     expect(result.current.getCachedData('test-key')).toBeNull();
   });
 
   it('deve salvar e recuperar dados do cache', () => {
-    const { result } = renderHook(() => useQueryCache());
+    const { result } = renderHook(() => useQueryCache(), { wrapper });
     const testData = { id: 1, name: 'Test' };
 
     act(() => {
@@ -24,7 +31,7 @@ describe('useQueryCache', () => {
   });
 
   it('deve limpar o cache', () => {
-    const { result } = renderHook(() => useQueryCache());
+    const { result } = renderHook(() => useQueryCache(), { wrapper });
     const testData = { id: 1, name: 'Test' };
 
     act(() => {
@@ -36,7 +43,7 @@ describe('useQueryCache', () => {
   });
 
   it('deve verificar se o cache está expirado', () => {
-    const { result } = renderHook(() => useQueryCache());
+    const { result } = renderHook(() => useQueryCache(), { wrapper });
     const testData = { id: 1, name: 'Test' };
 
     act(() => {
@@ -47,7 +54,7 @@ describe('useQueryCache', () => {
   });
 
   it('deve manter o cache válido dentro do TTL', () => {
-    const { result } = renderHook(() => useQueryCache());
+    const { result } = renderHook(() => useQueryCache(), { wrapper });
     const testData = { id: 1, name: 'Test' };
 
     act(() => {
@@ -56,4 +63,4 @@ describe('useQueryCache', () => {
 
     expect(result.current.getCachedData('test-key')).toEqual(testData);
   });
-}); 
+});
