@@ -12,5 +12,10 @@
     "isolatedModules": true,
     "emitDeclarationOnly": true,
     "jsx": "react-jsx",
+    "declaration": true,
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   }
 }

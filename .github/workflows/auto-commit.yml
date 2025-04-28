@@ -6,6 +6,9 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   auto-commit:
     runs-on: ubuntu-latest
@@ -23,4 +26,7 @@ jobs:
       - name: Commit and push if there are changes
         run: |
           git add .
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto commit: $(date)" && git push) 
+          if ! git diff --quiet || ! git diff --staged --quiet; then
+            git commit -m "Auto commit: $(date)"
+            git push
+          fi

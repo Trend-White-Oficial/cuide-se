@@ -52,3 +52,4 @@ coverage
 # Outros
 *.pem
 Thumbs.db
+.vercel

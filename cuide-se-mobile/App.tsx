@@ -1,22 +1,17 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PaperProvider } from 'react-native-paper';
-import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
+import { StatusBar } from 'expo-status-bar';
 import { AppProvider } from './src/contexts/AppContext';
-
-// Importação das telas
-import HomeScreen from './src/screens/HomeScreen';
-import SearchScreen from './src/screens/SearchScreen';
+import MainTabs from './components/MainTabs';
+import AuthScreen from './src/screens/AuthScreen';
 import ProfessionalProfileScreen from './src/screens/ProfessionalProfileScreen';
 import AppointmentScreen from './src/screens/AppointmentScreen';
 import AppointmentConfirmationScreen from './src/screens/AppointmentConfirmationScreen';
-import UserProfileScreen from './src/screens/UserProfileScreen';
-import AuthScreen from './src/screens/AuthScreen';
 
 // Tipos para navegação
 export type RootStackParamList = {
@@ -34,14 +29,7 @@ export type RootStackParamList = {
   };
 };
 
-export type MainTabParamList = {
-  Home: undefined;
-  Search: undefined;
-  Profile: undefined;
-};
-
 const Stack = createNativeStackNavigator<RootStackParamList>();
-const Tab = createBottomTabNavigator<MainTabParamList>();
 
 // Configuração do cliente React Query
 const queryClient = new QueryClient({
@@ -54,49 +42,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// Navegação principal com tabs
-function MainTabs() {
-  return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: '#FF69B4',
-        tabBarInactiveTintColor: '#666',
-      }}
-    >
-      <Tab.Screen 
-        name="Home" 
-        component={HomeScreen}
-        options={{
-          tabBarLabel: 'Início',
-          tabBarIcon: ({ color, size }) => (
-            <IconButton icon="home" size={size} iconColor={color} />
-          ),
-        }}
-      />
-      <Tab.Screen 
-        name="Search" 
-        component={SearchScreen}
-        options={{
-          tabBarLabel: 'Buscar',
-          tabBarIcon: ({ color, size }) => (
-            <IconButton icon="magnify" size={size} iconColor={color} />
-          ),
-        }}
-      />
-      <Tab.Screen 
-        name="Profile" 
-        component={UserProfileScreen}
-        options={{
-          tabBarLabel: 'Perfil',
-          tabBarIcon: ({ color, size }) => (
-            <IconButton icon="account" size={size} iconColor={color} />
-          ),
-        }}
-      />
-    </Tab.Navigator>
-  );
-}
+// Certifique-se de que este arquivo App.tsx está configurado para o ambiente mobile.
 
 export default function App() {
   return (
@@ -140,4 +86,4 @@ export default function App() {
       </AppProvider>
     </QueryClientProvider>
   );
-} 
+}
