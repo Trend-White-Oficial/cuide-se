@@ -6,7 +6,7 @@ export declare const useScheduling: () => {
     isLoadingProfessionalScheduling: boolean;
     userSchedulingError: Error;
     professionalSchedulingError: Error;
-    createScheduling: import("@tanstack/react-query").UseMutateFunction<import("axios").AxiosResponse<import("@/types/api").ApiResponse<Scheduling>, any>, Error, Omit<Scheduling, "professional" | "user" | "id" | "createdAt" | "updatedAt" | "service">, unknown>;
+    createScheduling: import("@tanstack/react-query").UseMutateFunction<import("axios").AxiosResponse<import("@/types/api").ApiResponse<Scheduling>, any>, Error, Omit<Scheduling, "user" | "professional" | "id" | "createdAt" | "updatedAt" | "service">, unknown>;
     cancelScheduling: import("@tanstack/react-query").UseMutateFunction<import("axios").AxiosResponse<import("@/types/api").ApiResponse<Scheduling>, any>, Error, string, unknown>;
     isCreating: boolean;
     isCancelling: boolean;

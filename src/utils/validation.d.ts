@@ -19,14 +19,14 @@ export declare const registerSchema: z.ZodObject<{
     name?: string;
     email?: string;
     phone?: string;
+    role?: "user" | "professional";
     password?: string;
-    role?: "professional" | "user";
 }, {
     name?: string;
     email?: string;
     phone?: string;
+    role?: "user" | "professional";
     password?: string;
-    role?: "professional" | "user";
 }>;
 export declare const professionalSchema: z.ZodObject<{
     specialties: z.ZodArray<z.ZodString, "many">;
