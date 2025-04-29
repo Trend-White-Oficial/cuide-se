@@ -37,12 +37,17 @@ npm install
 ```
 
 3. Configure as variáveis de ambiente:
-   VITE_MP_PUBLIC_KEY=APP_USR-a41aa369-d387-409f-8096-2e301682605e
-   VITE_MP_ACCESS_TOKEN=APP_USR-7734106620460643-042612-bd8043870828206336fbffc5255d4291-273629982
-   VITE_MP_WEBHOOK_SECRET=132b873ba514b7e6cf35c4d7f113abb5239c35907fca5dc3c8b8c6326ab987ce
-```bash
-cp .env.example .env
-```
+   Copie o arquivo `.env.example` para `.env` e preencha as chaves necessárias:
+   ```bash
+   cp .env.example .env
+   ```
+
+   Exemplo de variáveis de ambiente:
+   ```env
+   VITE_MP_PUBLIC_KEY=YOUR_PUBLIC_KEY
+   VITE_MP_ACCESS_TOKEN=YOUR_ACCESS_TOKEN
+   VITE_MP_WEBHOOK_SECRET=YOUR_WEBHOOK_SECRET
+   ```
 
 4. Inicie o servidor de desenvolvimento:
 ```bash
@@ -51,16 +56,27 @@ npm run dev
 
 ## 🏗️ Estrutura do Projeto
 src/
+
 ├── components/ # Componentes React
-│ ├── layout/ # Componentes de layout
-│ ├── features/ # Componentes específicos de funcionalidades
-│ └── shared/ # Componentes reutilizáveis
+
+├── layout/ # Componentes de layout
+
+├── features/ # Componentes específicos de funcionalidades
+
+├── shared/ # Componentes reutilizáveis
+
 ├── pages/ # Páginas da aplicação
+
 ├── hooks/ # Hooks personalizados
+
 ├── services/ # Serviços de API
+
 ├── utils/ # Funções utilitárias
+
 ├── types/ # Tipos TypeScript
+
 ├── constants/ # Constantes
+
 └── styles/ # Estilos globais
 
 
