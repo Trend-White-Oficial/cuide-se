@@ -53,7 +53,6 @@ yarn start
 ## Estrutura do Projeto
 
 ```
-src/
 ├── components/     # Componentes reutilizáveis
 ├── screens/        # Telas do aplicativo
 ├── navigation/     # Configuração de navegação
@@ -110,8 +109,11 @@ src/
 
 Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
+## 👥 Equipe
+
+- Desenvolvedor 1 - [@Trend-White](https://github.com/Trend-White-Oficial)
+
 ## Contato
 
-- Email: seu-email@exemplo.com
-- Website: https://cuide-se.com
-- LinkedIn: https://linkedin.com/in/seu-perfil 
+- Email: cuide.se.ame@gmail.com
+- Website: https://cuide-se.com 

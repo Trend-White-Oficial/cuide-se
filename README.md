@@ -129,7 +129,7 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ## 👥 Equipe
 
-- Desenvolvedor 1 - [@usuario1](https://github.com/Trend-White-Oficial)
+- Desenvolvedor 1 - [@Trend-White](https://github.com/Trend-White-Oficial)
 
 ## 📞 Suporte
 
