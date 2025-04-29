@@ -1,5 +1,7 @@
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
+import { useQuery, UseQueryOptions, QueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api';
+
+const queryClient = new QueryClient();
 
 interface QueryCacheOptions<T> extends Omit<UseQueryOptions<T>, 'queryKey' | 'queryFn'> {
   cacheTime?: number;
@@ -11,7 +13,7 @@ export const useQueryCache = <T>(
   url: string,
   options?: QueryCacheOptions<T>
 ) => {
-  return useQuery({
+  const query = useQuery({
     queryKey: key,
     queryFn: async () => {
       const { data } = await api.get<T>(url);
@@ -21,4 +23,26 @@ export const useQueryCache = <T>(
     staleTime: options?.staleTime || 1000 * 60 * 5, // 5 minutos
     ...options,
   });
-}; 
+
+  const getCachedData = (key: string) => {
+    return queryClient.getQueryData(key);
+  };
+
+  const setCachedData = (key: string, data: T, ttl?: number) => {
+    queryClient.setQueryData(key, data);
+    if (ttl) {
+      setTimeout(() => queryClient.removeQueries(key), ttl);
+    }
+  };
+
+  const clearCache = () => {
+    queryClient.clear();
+  };
+
+  return {
+    ...query,
+    getCachedData,
+    setCachedData,
+    clearCache,
+  };
+};

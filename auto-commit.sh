@@ -1,22 +1,19 @@
-#!/bin/bash
-
 # Configuração
-REPO_PATH="$(pwd)"
-BRANCH="main"
-COMMIT_MESSAGE="Auto commit: $(date)"
+$Branch = "main"
+$CommitMessage = "Auto commit: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 
 # Função para fazer commit e push
-do_commit() {
-  echo "Fazendo commit e push..."
-  git add .
-  git commit -m "$COMMIT_MESSAGE"
-  git push origin $BRANCH
-  echo "Commit e push concluídos!"
+function Do-Commit {
+    Write-Host "Fazendo commit e push..."
+    git add . || { Write-Host "Erro ao adicionar arquivos."; exit 1 }
+    git commit -m $CommitMessage || { Write-Host "Erro ao fazer commit."; exit 1 }
+    git push origin $Branch || { Write-Host "Erro ao fazer push."; exit 1 }
+    Write-Host "Commit e push concluídos!"
 }
 
 # Verifica se há mudanças
-if [[ -n $(git status -s) ]]; then
-  do_commit
-else
-  echo "Nenhuma mudança detectada."
-fi 
+if (git status --porcelain) {
+    Do-Commit
+} else {
+    Write-Host "Nenhuma mudança detectada."
+}
