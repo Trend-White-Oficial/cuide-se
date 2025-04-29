@@ -1,12 +1,25 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { Text, Button, Card, IconButton } from 'react-native-paper';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../App';
-import { mockProfessionals } from '../data/mockData';
 import { theme } from '../theme';
+
+// Função para buscar dados do profissional e serviço
+async function fetchProfessionalAndService(professionalId: string, serviceId: string) {
+  const response = await fetch(`https://api.cuide-se.com/professionals/${professionalId}`);
+  if (!response.ok) {
+    throw new Error('Erro ao buscar dados do profissional');
+  }
+  const professional = await response.json();
+  const service = professional.services.find((s: any) => s.id === serviceId);
+  if (!service) {
+    throw new Error('Serviço não encontrado');
+  }
+  return { professional, service };
+}
 
 type AppointmentConfirmationScreenRouteProp = RouteProp<RootStackParamList, 'AppointmentConfirmation'>;
 type AppointmentConfirmationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
@@ -16,8 +29,41 @@ export default function AppointmentConfirmationScreen() {
   const navigation = useNavigation<AppointmentConfirmationScreenNavigationProp>();
   const { professionalId, serviceId, date, time, notes, paymentMethod } = route.params;
 
-  const professional = mockProfessionals.find(p => p.id === professionalId);
-  const service = professional?.services.find(s => s.id === serviceId);
+  const [professional, setProfessional] = useState<any>(null);
+  const [service, setService] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadProfessionalAndService() {
+      try {
+        const { professional, service } = await fetchProfessionalAndService(professionalId, serviceId);
+        setProfessional(professional);
+        setService(service);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadProfessionalAndService();
+  }, [professionalId, serviceId]);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text>Erro: {error}</Text>
+      </View>
+    );
+  }
 
   if (!professional || !service) {
     return (
@@ -159,4 +205,4 @@ const styles = StyleSheet.create({
   homeButton: {
     marginTop: 'auto',
   },
-}); 
+});

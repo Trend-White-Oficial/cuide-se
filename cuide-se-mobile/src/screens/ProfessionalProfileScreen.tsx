@@ -1,12 +1,20 @@
-import React, { useState } from 'react';
-import { View, ScrollView, Image, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, ScrollView, Image, StyleSheet, ActivityIndicator } from 'react-native';
 import { Text, Button, Card, Avatar, Chip, Divider } from 'react-native-paper';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../App';
-import { mockProfessionals } from '../data/mockData';
 import { theme } from '../theme';
+
+// Função para buscar dados do profissional
+async function fetchProfessional(id: string) {
+  const response = await fetch(`https://api.cuide-se.com/professionals/${id}`);
+  if (!response.ok) {
+    throw new Error('Erro ao buscar dados do profissional');
+  }
+  return response.json();
+}
 
 type ProfessionalProfileScreenRouteProp = RouteProp<RootStackParamList, 'ProfessionalProfile'>;
 type ProfessionalProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
@@ -14,9 +22,39 @@ type ProfessionalProfileScreenNavigationProp = NativeStackNavigationProp<RootSta
 export default function ProfessionalProfileScreen() {
   const route = useRoute<ProfessionalProfileScreenRouteProp>();
   const navigation = useNavigation<ProfessionalProfileScreenNavigationProp>();
-  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [professional, setProfessional] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const professional = mockProfessionals.find(p => p.id === route.params.id);
+  useEffect(() => {
+    async function loadProfessional() {
+      try {
+        const data = await fetchProfessional(route.params.id);
+        setProfessional(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadProfessional();
+  }, [route.params.id]);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text>Erro: {error}</Text>
+      </View>
+    );
+  }
 
   if (!professional) {
     return (
@@ -56,7 +94,7 @@ export default function ProfessionalProfileScreen() {
         <Card style={styles.section}>
           <Card.Content>
             <Text style={styles.sectionTitle}>Serviços</Text>
-            {professional.services.map((service) => (
+            {professional.services.map((service: any) => (
               <View key={service.id} style={styles.serviceItem}>
                 <View style={styles.serviceInfo}>
                   <Text style={styles.serviceName}>{service.name}</Text>
@@ -68,7 +106,6 @@ export default function ProfessionalProfileScreen() {
                 <Button
                   mode="contained"
                   onPress={() => {
-                    setSelectedService(service.id);
                     navigation.navigate('Appointment', {
                       professionalId: professional.id,
                       serviceId: service.id,
@@ -92,7 +129,7 @@ export default function ProfessionalProfileScreen() {
                 ({professional.reviews.length} avaliações)
               </Text>
             </View>
-            {professional.reviews.map((review) => (
+            {professional.reviews.map((review: any) => (
               <View key={review.id} style={styles.reviewItem}>
                 <Text style={styles.reviewComment}>{review.comment}</Text>
                 <Text style={styles.reviewDate}>
@@ -209,4 +246,4 @@ const styles = StyleSheet.create({
     color: theme.colors.placeholder,
     fontSize: 12,
   },
-}); 
+});

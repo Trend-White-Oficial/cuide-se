@@ -1,5 +1,9 @@
+// Este arquivo contém dados fictícios (mock) usados para testes e desenvolvimento local.
+// Inclui informações de usuários, profissionais, serviços, avaliações, agendamentos, chats, notificações e pagamentos.
+
 import { User, Professional, Service, Review, Appointment, Chat, Message, Notification, Payment } from '../types';
 
+// Dados fictícios de usuários
 export const mockUsers: User[] = [
   {
     id: '1',
@@ -23,6 +27,7 @@ export const mockUsers: User[] = [
   },
 ];
 
+// Dados fictícios de profissionais
 export const mockProfessionals: Professional[] = [
   {
     id: '3',
@@ -142,6 +147,7 @@ export const mockProfessionals: Professional[] = [
   },
 ];
 
+// Dados fictícios de agendamentos
 export const mockAppointments: Appointment[] = [
   {
     id: '1',
@@ -169,6 +175,7 @@ export const mockAppointments: Appointment[] = [
   },
 ];
 
+// Dados fictícios de chats
 export const mockChats: Chat[] = [
   {
     id: '1',
@@ -195,6 +202,7 @@ export const mockChats: Chat[] = [
   },
 ];
 
+// Dados fictícios de notificações
 export const mockNotifications: Notification[] = [
   {
     id: '1',
@@ -207,6 +215,7 @@ export const mockNotifications: Notification[] = [
   },
 ];
 
+// Dados fictícios de pagamentos
 export const mockPayments: Payment[] = [
   {
     id: '1',
@@ -217,4 +226,4 @@ export const mockPayments: Payment[] = [
     createdAt: '2024-01-20T12:00:00Z',
     updatedAt: '2024-01-20T12:00:00Z',
   },
-]; 
+];

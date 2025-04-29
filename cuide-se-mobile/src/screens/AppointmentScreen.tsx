@@ -1,12 +1,25 @@
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { Text, Button, Card, TextInput, RadioButton } from 'react-native-paper';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../App';
-import { mockProfessionals } from '../data/mockData';
 import { theme } from '../theme';
+
+// Função para buscar dados do profissional e serviço
+async function fetchProfessionalAndService(professionalId: string, serviceId: string) {
+  const response = await fetch(`https://api.cuide-se.com/professionals/${professionalId}`);
+  if (!response.ok) {
+    throw new Error('Erro ao buscar dados do profissional');
+  }
+  const professional = await response.json();
+  const service = professional.services.find((s: any) => s.id === serviceId);
+  if (!service) {
+    throw new Error('Serviço não encontrado');
+  }
+  return { professional, service };
+}
 
 type AppointmentScreenRouteProp = RouteProp<RootStackParamList, 'Appointment'>;
 type AppointmentScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
@@ -16,13 +29,46 @@ export default function AppointmentScreen() {
   const navigation = useNavigation<AppointmentScreenNavigationProp>();
   const { professionalId, serviceId } = route.params;
 
-  const professional = mockProfessionals.find(p => p.id === professionalId);
-  const service = professional?.services.find(s => s.id === serviceId);
+  const [professional, setProfessional] = useState<any>(null);
+  const [service, setService] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<string>('credit');
+
+  useEffect(() => {
+    async function loadProfessionalAndService() {
+      try {
+        const { professional, service } = await fetchProfessionalAndService(professionalId, serviceId);
+        setProfessional(professional);
+        setService(service);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadProfessionalAndService();
+  }, [professionalId, serviceId]);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text>Erro: {error}</Text>
+      </View>
+    );
+  }
 
   if (!professional || !service) {
     return (
@@ -33,7 +79,6 @@ export default function AppointmentScreen() {
   }
 
   const handleConfirmAppointment = () => {
-    // Aqui você implementaria a lógica para confirmar o agendamento
     navigation.navigate('AppointmentConfirmation', {
       professionalId,
       serviceId,
@@ -160,4 +205,4 @@ const styles = StyleSheet.create({
     margin: 16,
     marginTop: 0,
   },
-}); 
+});

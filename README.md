@@ -1,6 +1,7 @@
 # Cuide-Se
 
-Cuide-Se é uma plataforma que conecta mulheres a profissionais de estética, como cabeleireiras, manicures, podólogas e outros especialistas em beleza.
+## Sobre o Projeto
+O Cuide-Se é uma plataforma que conecta mulheres a profissionais de estética, permitindo agendamentos, avaliações e gerenciamento de serviços de forma prática e segura.
 
 ## 🚀 Funcionalidades
 
@@ -11,17 +12,19 @@ Cuide-Se é uma plataforma que conecta mulheres a profissionais de estética, co
 - Sistema de notificações
 - Área do cliente e do profissional
 
+## Estrutura do Projeto
+- **components/**: Componentes reutilizáveis e específicos de funcionalidades.
+- **hooks/**: Hooks personalizados para lógica reutilizável.
+- **services/**: Serviços de API e integração com back-end.
+- **utils/**: Funções utilitárias para validações e formatações.
+- **pages/**: Páginas principais da aplicação.
+- **constants/**: Constantes globais usadas em todo o projeto.
+
 ## 🛠️ Tecnologias
 
-- React 18
-- TypeScript
-- Vite
-- Tailwind CSS
-- Shadcn/UI
-- React Query
-- React Router
-- Axios
-- Date-fns
+- **Frontend**: React, TypeScript, Tailwind CSS
+- **Mobile**: React Native, Expo
+- **Testes**: Vitest, Jest
 
 ## 📦 Instalação
 
@@ -53,32 +56,6 @@ npm install
 ```bash
 npm run dev
 ```
-
-## 🏗️ Estrutura do Projeto
-src/
-
-├── components/ # Componentes React
-
-├── layout/ # Componentes de layout
-
-├── features/ # Componentes específicos de funcionalidades
-
-├── shared/ # Componentes reutilizáveis
-
-├── pages/ # Páginas da aplicação
-
-├── hooks/ # Hooks personalizados
-
-├── services/ # Serviços de API
-
-├── utils/ # Funções utilitárias
-
-├── types/ # Tipos TypeScript
-
-├── constants/ # Constantes
-
-└── styles/ # Estilos globais
-
 
 ## 🔧 Configuração
 
@@ -140,16 +117,14 @@ npm run build
 
 O build será gerado na pasta `dist/`.
 
-## 🤝 Contribuição
-
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
-3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
-4. Push para a branch (`git push origin feature/nova-feature`)
-5. Abra um Pull Request
+## 🤝 Como Contribuir
+1. Faça um fork do projeto.
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`).
+3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`).
+4. Push para a branch (`git push origin feature/nova-feature`).
+5. Abra um Pull Request.
 
 ## 📄 Licença
-
 Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
 ## 👥 Equipe
