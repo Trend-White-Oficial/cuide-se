@@ -1,10 +1,12 @@
 
+// Componente principal do Dashboard Administrativo
+// Este componente exibe as principais métricas e atividades do sistema
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Calendar, Star, Tag } from 'lucide-react';
 
 const AdminDashboard = () => {
-  // Mock data - in a real application this would come from your backend
+  // Dados estatísticos do dashboard (em produção, estes dados viriam de uma API)
   const stats = [
     { id: 1, title: 'Usuários ativos', value: '157', icon: <Users className="h-8 w-8 text-pink" />, change: '+12%' },
     { id: 2, title: 'Agendamentos', value: '243', icon: <Calendar className="h-8 w-8 text-pink" />, change: '+18%' },
@@ -15,9 +17,11 @@ const AdminDashboard = () => {
   return (
     <AdminLayout title="Dashboard">
       <div className="space-y-6">
+        {/* Seção de Visão Geral */}
         <section>
           <h2 className="text-2xl font-bold mb-4">Visão Geral</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Cards estatísticos */}
             {stats.map((stat) => (
               <Card key={stat.id}>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -28,6 +32,7 @@ const AdminDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{stat.value}</div>
+                  {/* Exibe a variação percentual com cores diferentes */}
                   <p className="text-xs text-muted-foreground mt-1">
                     {stat.change.startsWith('+') ? (
                       <span className="text-green-600">{stat.change} do mês anterior</span>
@@ -43,6 +48,7 @@ const AdminDashboard = () => {
           </div>
         </section>
 
+        {/* Seção de Atividade Recente */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>

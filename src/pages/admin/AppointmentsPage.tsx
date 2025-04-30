@@ -1,3 +1,5 @@
+// Componente AppointmentsPage
+// Página administrativa para gerenciar agendamentos da plataforma
 import { useState } from 'react';
 import { Sidebar } from '@/components/admin/Sidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,14 +12,17 @@ import { Search, Calendar, Check, X, Clock } from 'lucide-react';
 import { mockAppointments } from '@/data/mockData';
 
 const AppointmentsPage = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  // Estados do componente
+  const [searchTerm, setSearchTerm] = useState(''); // Termo de busca
+  const [statusFilter, setStatusFilter] = useState('all'); // Filtro de status
 
+  // Filtra agendamentos com base no termo de busca
   const filteredAppointments = mockAppointments.filter(appointment => 
     appointment.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     appointment.professionalName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Retorna o badge correspondente ao status do agendamento
   const getStatusBadge = (status: string) => {
     const statusMap = {
       confirmed: { class: 'bg-green-100 text-green-800', text: 'Confirmado' },
@@ -28,6 +33,7 @@ const AppointmentsPage = () => {
     return statusMap[status as keyof typeof statusMap] || statusMap.pending;
   };
 
+  // Formata data e hora para exibição
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -44,6 +50,7 @@ const AppointmentsPage = () => {
       
       <div className="flex-1 overflow-auto">
         <div className="p-8">
+          {/* Cabeçalho da página */}
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Agendamentos</h1>

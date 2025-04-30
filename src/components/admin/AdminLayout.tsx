@@ -1,4 +1,7 @@
 
+// Componente de Layout Administrativo
+// Este componente serve como container para todas as páginas administrativas
+// Gerencia a autenticação e fornece a navegação do painel
 import { ReactNode, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,36 +17,40 @@ import {
 } from 'lucide-react';
 
 type AdminLayoutProps = {
-  children: ReactNode;
-  title: string;
+  children: ReactNode; // Conteúdo das páginas administrativas
+  title: string; // Título da página atual
 };
 
 const AdminLayout = ({ children, title }: AdminLayoutProps) => {
   const navigate = useNavigate();
 
+  // Verifica se o usuário está autenticado
   useEffect(() => {
-    // Check if admin is authenticated
     const isAdminAuthenticated = localStorage.getItem('adminAuthenticated') === 'true';
     if (!isAdminAuthenticated) {
       navigate('/admin/login');
     }
   }, [navigate]);
 
+  // Função para logout
   const handleLogout = () => {
+    // Remove as credenciais do localStorage
     localStorage.removeItem('adminAuthenticated');
     localStorage.removeItem('adminLastLogin');
+    // Redireciona para a página de login
     navigate('/admin/login');
   };
 
   return (
     <div className="min-h-screen flex bg-gray-100">
-      {/* Sidebar */}
+      {/* Barra lateral de navegação */}
       <div className="w-64 bg-white shadow-lg hidden md:block">
         <div className="p-4 border-b">
           <h2 className="text-xl font-semibold text-pink">Cuide-Se Admin</h2>
         </div>
         <nav className="p-4">
           <ul className="space-y-2">
+            {/* Link para o Dashboard */}
             <li>
               <Link to="/admin/dashboard" className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-700 hover:text-pink">
                 <LayoutDashboard size={20} className="mr-3" />

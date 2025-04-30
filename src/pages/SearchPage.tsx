@@ -1,3 +1,5 @@
+// Componente SearchPage
+// Página principal de busca de profissionais de estética
 import { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -8,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Professional } from '@/types';
 import { Search } from 'lucide-react';
 
+// Lista de especialidades disponíveis para filtro
 const specialties = [
   "Todas especialidades",
   "Manicure", 
@@ -17,10 +20,11 @@ const specialties = [
 ];
 
 const SearchPage = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedSpecialty, setSelectedSpecialty] = useState("Todas especialidades");
+  // Estados do componente
+  const [searchTerm, setSearchTerm] = useState(""); // Termo de busca
+  const [selectedSpecialty, setSelectedSpecialty] = useState("Todas especialidades"); // Especialidade selecionada
   
-  // Filtrar profissionais com base na especialidade e termo de busca
+  // Função de filtro que combina busca por nome/localização e especialidade
   const filteredProfessionals = mockProfessionals.filter((professional) => {
     const matchesSpecialty = selectedSpecialty === "Todas especialidades" || 
                             professional.specialty === selectedSpecialty;
@@ -40,7 +44,9 @@ const SearchPage = () => {
           <div className="container mx-auto px-6">
             <h1 className="text-3xl font-bold text-gray-800 mb-6">Buscar Profissionais</h1>
             
+            {/* Barra de busca e seleção de especialidade */}
             <div className="flex flex-col md:flex-row gap-4 max-w-3xl">
+              {/* Menu dropdown de especialidades */}
               <Select 
                 defaultValue={selectedSpecialty} 
                 onValueChange={setSelectedSpecialty}

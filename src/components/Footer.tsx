@@ -1,3 +1,5 @@
+// Componente Footer
+// Rodapé do site com informações importantes e links de navegação
 import { Link } from 'react-router-dom';
 
 const Footer = () => {
@@ -5,6 +7,7 @@ const Footer = () => {
     <footer className="bg-gray-50 border-t border-gray-100 py-8 mt-auto">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Seção sobre o Cuide-Se */}
           <div>
             <h3 className="text-lg font-semibold text-pink mb-4">Cuide-Se</h3>
             <p className="text-gray-600 text-sm">
@@ -12,6 +15,7 @@ const Footer = () => {
             </p>
           </div>
           
+          {/* Seção de Links */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Links</h3>
             <ul className="space-y-2">
@@ -43,6 +47,7 @@ const Footer = () => {
             </ul>
           </div>
           
+          {/* Seção de Contato */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Contato</h3>
             <p className="text-gray-600 text-sm mb-2">cuide.se.ame@gmail.com</p>

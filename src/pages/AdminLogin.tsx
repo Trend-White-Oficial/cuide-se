@@ -1,4 +1,6 @@
 
+// Componente principal de login administrativo
+// Este componente gerencia a interface de login para administradores
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -9,43 +11,49 @@ import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Home } from 'lucide-react';
 
 const AdminLogin = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  // Estados do componente
+  const [username, setUsername] = useState(''); // Estado para armazenar o nome de usuário
+  const [password, setPassword] = useState(''); // Estado para armazenar a senha
+  const [showPassword, setShowPassword] = useState(false); // Estado para controlar a visibilidade da senha
+  const [loading, setLoading] = useState(false); // Estado para controlar o carregamento
+  const navigate = useNavigate(); // Hook para navegação
+  const { toast } = useToast(); // Hook para exibir notificações
 
-  // Mock admin credentials - in a real app, this would be authenticated against a secure backend
-  const ADMIN_USER = 'admin';
-  const ADMIN_PASSWORD = 'admin123';
+  // Credenciais do administrador (em produção, estas devem estar em um ambiente seguro)
+  const ADMIN_USER = 'cuide.se.ame@gmail.com';
+  const ADMIN_PASSWORD = 'Biel22##';
 
+  // Função principal de autenticação
   const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault(); // Previne o comportamento padrão do formulário
+    setLoading(true); // Ativa o estado de carregamento
 
-    // Simple mock authentication
+    // Simula uma requisição de autenticação
     setTimeout(() => {
+      // Verifica se as credenciais estão corretas
       if (username === ADMIN_USER && password === ADMIN_PASSWORD) {
-        // Set admin authentication in localStorage
+        // Armazena a autenticação no localStorage
         localStorage.setItem('adminAuthenticated', 'true');
         localStorage.setItem('adminLastLogin', new Date().toISOString());
         
+        // Exibe mensagem de sucesso
         toast({
           title: "Login bem-sucedido",
           description: "Bem-vindo ao painel administrativo do Cuide-Se.",
         });
         
+        // Redireciona para o dashboard administrativo
         navigate('/admin/dashboard');
       } else {
+        // Exibe mensagem de erro
         toast({
           variant: "destructive",
           title: "Falha no login",
           description: "Credenciais inválidas. Tente novamente.",
         });
       }
-      setLoading(false);
-    }, 800); // Simulate network request
+      setLoading(false); // Desativa o estado de carregamento
+    }, 800); // Simula um delay de 800ms para a requisição
   };
 
   return (

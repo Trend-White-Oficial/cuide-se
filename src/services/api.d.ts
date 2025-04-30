@@ -56,7 +56,4 @@ export declare const serviceService: {
     update: (id: string, data: Partial<Service>) => Promise<import("axios").AxiosResponse<ApiResponse<Service>, any>>;
     delete: (id: string) => Promise<import("axios").AxiosResponse<ApiResponse<void>, any>>;
 };
-export declare const notificationsService: {
-    getAll: () => Promise<any[]>;
-};
 export { api };

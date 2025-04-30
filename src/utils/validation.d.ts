@@ -43,18 +43,18 @@ export declare const professionalSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         number?: string;
         state?: string;
+        city?: string;
         street?: string;
         complement?: string;
         neighborhood?: string;
-        city?: string;
         zipCode?: string;
     }, {
         number?: string;
         state?: string;
+        city?: string;
         street?: string;
         complement?: string;
         neighborhood?: string;
-        city?: string;
         zipCode?: string;
     }>;
     workingHours: z.ZodRecord<z.ZodString, z.ZodObject<{
@@ -74,10 +74,10 @@ export declare const professionalSchema: z.ZodObject<{
     address?: {
         number?: string;
         state?: string;
+        city?: string;
         street?: string;
         complement?: string;
         neighborhood?: string;
-        city?: string;
         zipCode?: string;
     };
     workingHours?: Record<string, {
@@ -91,10 +91,10 @@ export declare const professionalSchema: z.ZodObject<{
     address?: {
         number?: string;
         state?: string;
+        city?: string;
         street?: string;
         complement?: string;
         neighborhood?: string;
-        city?: string;
         zipCode?: string;
     };
     workingHours?: Record<string, {
@@ -111,15 +111,15 @@ export declare const serviceSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     name?: string;
     description?: string;
+    price?: number;
     duration?: number;
     category?: string;
-    price?: number;
 }, {
     name?: string;
     description?: string;
+    price?: number;
     duration?: number;
     category?: string;
-    price?: number;
 }>;
 export declare const reviewSchema: z.ZodObject<{
     rating: z.ZodNumber;
