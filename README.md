@@ -125,7 +125,7 @@ O build será gerado na pasta `dist/`.
 5. Abra um Pull Request.
 
 ## 📄 Licença
-Este projeto está sob a licença GNU General Public License (GPL). Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+Este projeto é estritamente comercial e proprietário. O uso, cópia, modificação ou distribuição do software sem autorização expressa e por escrito da Cuide-Se é estritamente proibido. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
 ## 👥 Equipe
 
