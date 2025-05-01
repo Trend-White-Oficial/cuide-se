@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+// Componente ProfessionalProfile
+// Página de perfil detalhado de um profissional de estética
+>>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -14,7 +19,11 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/components/ui/use-toast';
 
+<<<<<<< HEAD
 // Função para buscar dados do profissional
+=======
+// Função para buscar dados do profissional via API
+>>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
 async function fetchProfessional(id: string) {
   const response = await fetch(`https://api.cuide-se.com/professionals/${id}`);
   if (!response.ok) {
@@ -27,6 +36,7 @@ const ProfessionalProfile = () => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
 
+<<<<<<< HEAD
   const [professional, setProfessional] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,10 +47,28 @@ const ProfessionalProfile = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   // Horários disponíveis (simulados)
+=======
+  // Estados do componente
+  const [professional, setProfessional] = useState<any>(null); // Dados do profissional
+  const [loading, setLoading] = useState(true); // Estado de carregamento
+  const [error, setError] = useState<string | null>(null); // Erros de carregamento
+
+  // Estados para agendamento
+  const [selectedService, setSelectedService] = useState<Service | null>(null); // Serviço selecionado
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined); // Data selecionada
+  const [selectedTime, setSelectedTime] = useState<string | null>(null); // Horário selecionado
+  const [dialogOpen, setDialogOpen] = useState(false); // Estado do diálogo de agendamento
+
+  // Lista de horários disponíveis para agendamento
+>>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
   const availableTimes = [
     '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'
   ];
 
+<<<<<<< HEAD
+=======
+  // Efeito que carrega os dados do profissional quando o componente é montado
+>>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
   useEffect(() => {
     async function loadProfessional() {
       try {
@@ -52,7 +80,14 @@ const ProfessionalProfile = () => {
         setLoading(false);
       }
     }
+<<<<<<< HEAD
     loadProfessional();
+=======
+
+    if (id) {
+      loadProfessional();
+    }
+>>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
   }, [id]);
 
   if (loading) {

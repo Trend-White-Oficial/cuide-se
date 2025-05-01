@@ -3,6 +3,7 @@ interface QueryCacheOptions<T> extends Omit<UseQueryOptions<T>, 'queryKey' | 'qu
     cacheTime?: number;
     staleTime?: number;
 }
+<<<<<<< HEAD
 export declare const useQueryCache: <T>(key: string[], url: string, options?: QueryCacheOptions<T>) => {
     getCachedData: (key: string) => unknown;
     setCachedData: (key: string, data: T, ttl?: number) => void;
@@ -178,4 +179,7 @@ export declare const useQueryCache: <T>(key: string[], url: string, options?: Qu
     fetchStatus: import("@tanstack/query-core").FetchStatus;
     promise: Promise<T>;
 };
+=======
+export declare const useQueryCache: <T>(key: string[], url: string, options?: QueryCacheOptions<T>) => import("@tanstack/react-query").UseQueryResult<T, Error>;
+>>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
 export {};

@@ -1,6 +1,50 @@
 # Dependências
 node_modules
 .pnp
+<<<<<<< HEAD
+=======
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# Diretórios do projeto
+app-example
+/build/
+/dist/
+/node_modules/
+.expo/
+.vscode/
+.next/
+>>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
 .pnp.js
 
 # Build
@@ -53,3 +97,7 @@ coverage
 *.pem
 Thumbs.db
 .vercel
+<<<<<<< HEAD
+=======
+>>>>>>> origin/main
+>>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97

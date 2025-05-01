@@ -1,4 +1,8 @@
 {
+<<<<<<< HEAD
+=======
+  "extends": "expo/tsconfig.base",
+>>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
@@ -16,6 +20,18 @@
     "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"]
+<<<<<<< HEAD
     }
   }
+=======
+    },
+    "strict": true
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ]
+>>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
 }

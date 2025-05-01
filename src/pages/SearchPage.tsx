@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+// Componente SearchPage
+// Página principal de busca de profissionais de estética
+>>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
 import { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -8,6 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Professional } from '@/types';
 import { Search } from 'lucide-react';
 
+<<<<<<< HEAD
+=======
+// Lista de especialidades disponíveis para filtro
+>>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
 const specialties = [
   "Todas especialidades",
   "Manicure", 
@@ -17,10 +26,18 @@ const specialties = [
 ];
 
 const SearchPage = () => {
+<<<<<<< HEAD
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("Todas especialidades");
   
   // Filtrar profissionais com base na especialidade e termo de busca
+=======
+  // Estados do componente
+  const [searchTerm, setSearchTerm] = useState(""); // Termo de busca
+  const [selectedSpecialty, setSelectedSpecialty] = useState("Todas especialidades"); // Especialidade selecionada
+  
+  // Função de filtro que combina busca por nome/localização e especialidade
+>>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
   const filteredProfessionals = mockProfessionals.filter((professional) => {
     const matchesSpecialty = selectedSpecialty === "Todas especialidades" || 
                             professional.specialty === selectedSpecialty;
@@ -40,7 +57,13 @@ const SearchPage = () => {
           <div className="container mx-auto px-6">
             <h1 className="text-3xl font-bold text-gray-800 mb-6">Buscar Profissionais</h1>
             
+<<<<<<< HEAD
             <div className="flex flex-col md:flex-row gap-4 max-w-3xl">
+=======
+            {/* Barra de busca e seleção de especialidade */}
+            <div className="flex flex-col md:flex-row gap-4 max-w-3xl">
+              {/* Menu dropdown de especialidades */}
+>>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
               <Select 
                 defaultValue={selectedSpecialty} 
                 onValueChange={setSelectedSpecialty}

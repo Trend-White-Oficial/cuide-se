@@ -49,6 +49,7 @@
     "expo-linking": "~7.0.5",
     "expo-location": "^18.0.10",
     "expo-router": "~4.0.20",
+    "expo-secure-store": "^14.0.1",
     "expo-splash-screen": "~0.29.24",
     "expo-status-bar": "~2.0.1",
     "expo-symbols": "~0.2.2",
@@ -122,6 +123,7 @@
     "@radix-ui/react-toggle": "^1.0.3",
     "@radix-ui/react-toggle-group": "^1.0.4",
     "@radix-ui/react-tooltip": "^1.0.7",
+    "@react-navigation/stack": "^7.2.10",
     "zustand": "^4.5.1"
   },
   "devDependencies": {

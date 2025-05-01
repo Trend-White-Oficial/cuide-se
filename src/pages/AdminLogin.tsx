@@ -1,4 +1,9 @@
 
+<<<<<<< HEAD
+=======
+// Componente principal de login administrativo
+// Este componente gerencia a interface de login para administradores
+>>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -9,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Home } from 'lucide-react';
 
 const AdminLogin = () => {
+<<<<<<< HEAD
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -31,21 +37,61 @@ const AdminLogin = () => {
         localStorage.setItem('adminAuthenticated', 'true');
         localStorage.setItem('adminLastLogin', new Date().toISOString());
         
+=======
+  // Estados do componente
+  const [username, setUsername] = useState(''); // Estado para armazenar o nome de usuário
+  const [password, setPassword] = useState(''); // Estado para armazenar a senha
+  const [showPassword, setShowPassword] = useState(false); // Estado para controlar a visibilidade da senha
+  const [loading, setLoading] = useState(false); // Estado para controlar o carregamento
+  const navigate = useNavigate(); // Hook para navegação
+  const { toast } = useToast(); // Hook para exibir notificações
+
+  // Credenciais do administrador (em produção, estas devem estar em um ambiente seguro)
+  const ADMIN_USER = 'cuide.se.ame@gmail.com';
+  const ADMIN_PASSWORD = 'Biel22##';
+
+  // Função principal de autenticação
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault(); // Previne o comportamento padrão do formulário
+    setLoading(true); // Ativa o estado de carregamento
+
+    // Simula uma requisição de autenticação
+    setTimeout(() => {
+      // Verifica se as credenciais estão corretas
+      if (username === ADMIN_USER && password === ADMIN_PASSWORD) {
+        // Armazena a autenticação no localStorage
+        localStorage.setItem('adminAuthenticated', 'true');
+        localStorage.setItem('adminLastLogin', new Date().toISOString());
+        
+        // Exibe mensagem de sucesso
+>>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
         toast({
           title: "Login bem-sucedido",
           description: "Bem-vindo ao painel administrativo do Cuide-Se.",
         });
         
+<<<<<<< HEAD
         navigate('/admin/dashboard');
       } else {
+=======
+        // Redireciona para o dashboard administrativo
+        navigate('/admin/dashboard');
+      } else {
+        // Exibe mensagem de erro
+>>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
         toast({
           variant: "destructive",
           title: "Falha no login",
           description: "Credenciais inválidas. Tente novamente.",
         });
       }
+<<<<<<< HEAD
       setLoading(false);
     }, 800); // Simulate network request
+=======
+      setLoading(false); // Desativa o estado de carregamento
+    }, 800); // Simula um delay de 800ms para a requisição
+>>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
   };
 
   return (
