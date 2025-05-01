@@ -1,58 +1,15 @@
 # Cuide-Se
 
 ## Sobre o Projeto
-O Cuide-Se é uma plataforma que conecta mulheres a profissionais de estética, permitindo agendamentos, avaliações e gerenciamento de serviços de forma prática e segura.
 
-## 🚀 Funcionalidades
+Este repositório contém código proprietário da Cuide-Se. O acesso, uso, cópia ou distribuição deste código sem autorização expressa e por escrito da Cuide-Se é estritamente proibido.
 
-- Busca de profissionais por especialidade e localização
-- Agendamento de serviços
-- Avaliações e comentários
-- Perfis profissionais detalhados
-- Sistema de notificações
-- Área do cliente e do profissional
+## ⚠️ Aviso Legal
 
-## Estrutura do Projeto
-- **components/**: Componentes reutilizáveis e específicos de funcionalidades.
-- **hooks/**: Hooks personalizados para lógica reutilizável.
-- **services/**: Serviços de API e integração com back-end.
-- **utils/**: Funções utilitárias para validações e formatações.
-- **pages/**: Páginas principais da aplicação.
-- **constants/**: Constantes globais usadas em todo o projeto.
-
-## 🛠️ Tecnologias
-
-- **Frontend**: React, TypeScript, Tailwind CSS
-- **Mobile**: React Native, Expo
-- **Testes**: Vitest, Jest
-
-## 📦 Instalação
-
-1. Clone o repositório:
-```bash
-git clone https://github.com/Trend-White-Oficial/cuide-se
-cd cuide-se
-```
-
-2. Instale as dependências:
-```bash
-npm install
-```
-
-3. Configure as variáveis de ambiente:
-   Copie o arquivo `.env.example` para `.env` e preencha as chaves necessárias:
-   ```bash
-cp .env.example .env
-```
-
-   Exemplo de variáveis de ambiente:
-   ```env
-   VITE_MP_PUBLIC_KEY=YOUR_PUBLIC_KEY
-   VITE_MP_ACCESS_TOKEN=YOUR_ACCESS_TOKEN
-   VITE_MP_WEBHOOK_SECRET=YOUR_WEBHOOK_SECRET
-   ```
-
-4. Inicie o servidor de desenvolvimento:
+- Este código é propriedade exclusiva da Cuide-Se.
+- Nenhuma parte deste código pode ser usada, copiada, modificada ou distribuída sem autorização expressa.
+- O uso comercial deste código é exclusivo da Cuide-Se.
+- Qualquer uso não autorizado será considerado violação de direitos autorais.
 ```bash
 npm run dev
 ```
