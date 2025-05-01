@@ -1,8 +1,5 @@
-<<<<<<< HEAD
-=======
 // Componente Footer
 // Rodapé do site com informações importantes e links de navegação
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
 import { Link } from 'react-router-dom';
 
 const Footer = () => {
@@ -10,10 +7,7 @@ const Footer = () => {
     <footer className="bg-gray-50 border-t border-gray-100 py-8 mt-auto">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-<<<<<<< HEAD
-=======
           {/* Seção sobre o Cuide-Se */}
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
           <div>
             <h3 className="text-lg font-semibold text-pink mb-4">Cuide-Se</h3>
             <p className="text-gray-600 text-sm">
@@ -21,10 +15,7 @@ const Footer = () => {
             </p>
           </div>
           
-<<<<<<< HEAD
-=======
           {/* Seção de Links */}
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Links</h3>
             <ul className="space-y-2">
@@ -56,10 +47,7 @@ const Footer = () => {
             </ul>
           </div>
           
-<<<<<<< HEAD
-=======
           {/* Seção de Contato */}
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Contato</h3>
             <p className="text-gray-600 text-sm mb-2">cuide.se.ame@gmail.com</p>
