@@ -1,45 +1,3 @@
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-# Cui'de-se
-
-Aplicativo de cuidados pessoais desenvolvido com React Native e Expo.
-
-## 🚀 Começando
-
-1. Instale as dependências
-
-   ```bash
-   npm install
-   ```
-
-2. Inicie o aplicativo
-
-   ```bash
-   npx expo start
-   ```
-
-## 📚 Estrutura do Projeto
-
-- `app/`: Componentes e rotas do aplicativo
-- `components/`: Componentes reutilizáveis
-- `hooks/`: Custom hooks
-- `constants/`: Constantes e configurações
-- `scripts/`: Scripts de desenvolvimento
-
-## 🛠️ Desenvolvimento
-
-1. Clone o repositório
-2. Instale as dependências
-3. Inicie o projeto com `npm run dev`
-4. Push para a branch (`git push origin feature/nova-feature`).
-5. Abra um Pull Request.
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-=======
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
 # Cuide-Se
 
 ## Sobre o Projeto
@@ -84,8 +42,8 @@ npm install
 3. Configure as variáveis de ambiente:
    Copie o arquivo `.env.example` para `.env` e preencha as chaves necessárias:
    ```bash
-   cp .env.example .env
-   ```
+cp .env.example .env
+```
 
    Exemplo de variáveis de ambiente:
    ```env
@@ -167,7 +125,7 @@ O build será gerado na pasta `dist/`.
 5. Abra um Pull Request.
 
 ## 📄 Licença
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+Este projeto está sob a licença GNU General Public License (GPL). Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
 ## 👥 Equipe
 
@@ -176,7 +134,3 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 ## 📞 Suporte
 
 Para suporte, envie um email para cuide.se.ame@gmail.com ou abra uma issue no GitHub.
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
