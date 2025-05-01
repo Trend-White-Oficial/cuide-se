@@ -1,24 +1,11 @@
-<<<<<<< HEAD
-=======
 // Contexto de Autenticação
 // Gerencia o estado de autenticação do usuário e seus dados
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
-<<<<<<< HEAD
-interface AuthContextType {
-  user: User | null;
-  userData: any | null;
-  loading: boolean;
-  isAuthenticated: boolean;
-  error: string | null;
-}
-
-=======
 // Interface que define os tipos de dados do contexto
 interface AuthContextType {
   user: User | null; // Usuário atual
@@ -29,7 +16,6 @@ interface AuthContextType {
 }
 
 // Criação do contexto com valores iniciais
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
 const AuthContext = createContext<AuthContextType>({
   user: null,
   userData: null,
@@ -38,39 +24,26 @@ const AuthContext = createContext<AuthContextType>({
   error: null,
 });
 
-<<<<<<< HEAD
-export const useAuth = () => useContext(AuthContext);
-
-=======
 // Hook personalizado para usar o contexto
 export const useAuth = () => useContext(AuthContext);
 
 // Provider que gerencia o estado de autenticação
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-<<<<<<< HEAD
-  const isAuthenticated = !!user;
-
-=======
   // Verifica se o usuário está autenticado
   const isAuthenticated = !!user;
 
   // Efeito que monitora mudanças no estado de autenticação do Firebase
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       try {
         setUser(user);
         if (user) {
-<<<<<<< HEAD
-=======
           // Busca dados do usuário no Firestore
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
           const userDoc = await getDoc(doc(db, 'users', user.uid));
           if (userDoc.exists()) {
             setUserData(userDoc.data());
