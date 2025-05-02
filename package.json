@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "expo-dev-client": "^5.1.7",
+    "expo-router": "^5.0.4",
+    "expo-splash-screen": "^0.30.8"
+  }
+}
