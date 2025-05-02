@@ -1,0 +1,17 @@
+{
+  "name": "cuide-se",
+  "projectId": "prj_heZD1pcnFGpnZpcOq2V7qllnMnDE",
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
