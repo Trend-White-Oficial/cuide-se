@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "react-native-expo-app",
-    "slug": "react-native-expo-app",
+    "name": "Cuide-Se",
+    "slug": "cuide-se",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "cuide-se",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -16,7 +16,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.gmtp.reactnativeexpoapp"
+      "package": "com.cuide.se"
     },
     "web": {
       "bundler": "metro",
@@ -43,7 +43,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "e6eabe79-9fbd-4940-ba62-fa564198e584"
+        "projectId": "prj_heZD1pcnFGpnZpcOq2V7qllnMnDE"
       }
     }
   }
