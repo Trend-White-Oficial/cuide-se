@@ -46,6 +46,7 @@
 ### API e Comunicação
 - `axios`: Cliente HTTP
 - `firebase`: Firebase
+- `@supabase/supabase-js`: SDK do Supabase
 - `expo-secure-store`: Armazenamento seguro
 
 ### Internacionalização
