@@ -135,7 +135,7 @@ export const securityConfig = {
 
     // JWT Configuration
     jwt: {
-        secret: import.meta.env.VITE_JWT_SECRET || 'your-secret-key',
+        secret: import.meta.env.VITE_JWT_SECRET || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzb3V1aG5wdmNzamJ3cGhmdHFkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NjE1ODY5NywiZXhwIjoyMDYxNzM0Njk3fQ.IMRTsok1qh31Gjldfk6swxFh9nUBI8zzQkCNPxIIN24',
         expiresIn: '24h',
         refreshExpiresIn: '7d',
         algorithms: ['HS256']
