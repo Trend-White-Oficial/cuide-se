@@ -8,7 +8,7 @@ on:
   push:
     branches:
       - main
-      - principaç
+      - principal
 
 jobs:
   lint-and-test:

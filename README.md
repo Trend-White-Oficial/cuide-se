@@ -500,6 +500,57 @@ VITE_PROXY_PATH=/api
 
 ## 📦 Contextos React
 
+### CartContext
+
+Contexto para gerenciamento de carrinho de agendamentos:
+
+- **Estado Gerenciado**:
+  - `items`: Array de itens no carrinho
+  - `total`: Valor total do carrinho
+  - `loading`: Estado de carregamento
+  - `error`: Estado de erro
+
+- **Funções**:
+  - `fetchCart`: Busca itens do carrinho do usuário
+  - `addToCart`: Adiciona um serviço ao carrinho
+  - `removeFromCart`: Remove um item do carrinho
+  - `clearCart`: Limpa o carrinho
+  - `checkout`: Finaliza o agendamento
+
+### PaymentContext
+
+Contexto para gerenciamento de pagamentos:
+
+- **Estado Gerenciado**:
+  - `transactions`: Array de transações do usuário
+  - `loading`: Estado de carregamento
+  - `error`: Estado de erro
+
+- **Funções**:
+  - `fetchTransactions`: Busca transações do usuário
+  - `createTransaction`: Inicia uma nova transação
+  - `cancelTransaction`: Cancela uma transação
+  - `refundTransaction`: Refunde uma transação
+
+### UserSettingsContext
+
+Contexto para gerenciamento de configurações do usuário:
+
+- **Estado Gerenciado**:
+  - `settings`: Configurações do usuário
+  - `loading`: Estado de carregamento
+  - `error`: Estado de erro
+
+- **Funções**:
+  - `fetchSettings`: Busca configurações do usuário
+  - `updateSettings`: Atualiza configurações
+  - `updateTheme`: Atualiza tema
+  - `updateNotificationSettings`: Atualiza configurações de notificações
+  - `updateLanguage`: Atualiza idioma
+  - `updateTimezone`: Atualiza fuso horário
+  - `updateCurrency`: Atualiza moeda
+  - `updateDistanceUnit`: Atualiza unidade de distância
+
 ### NotificationsContext
 
 Contexto para gerenciamento de notificações do usuário:
