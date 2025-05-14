@@ -13,21 +13,32 @@ permissions:
 jobs:
   auto-commit:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure Git
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Commit and push if there are changes
         run: |
           git add .
-          if ! git diff --quiet || ! git diff --staged --quiet; then
+          # Ignora se o último commit foi feito pela própria action
+          LAST_COMMITTER=$(git log -1 --pretty=format:'%an')
+          if [ "$LAST_COMMITTER" = "github-actions[bot]" ]; then
+            echo "Último commit foi da própria action. Evitando loop infinito."
+            exit 0
+          fi
+
+          if git diff --cached --quiet; then
+            echo "Sem mudanças para commit."
+          else
             git commit -m "Auto commit: $(date)"
             git push
           fi
