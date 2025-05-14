@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-=======
-// Componente ProfessionalDetails
-// Componente que exibe detalhes completos de um profissional de estética
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
+
 import { Star, MapPin, Calendar, Clock } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -10,65 +6,44 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import type { Professional } from '@/types/api';
 
-<<<<<<< HEAD
-interface ProfessionalDetailsProps {
-  professional: Professional;
-=======
 // Interface que define as propriedades do componente
 interface ProfessionalDetailsProps {
   professional: Professional; // Dados do profissional
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
 }
 
 export function ProfessionalDetails({ professional }: ProfessionalDetailsProps) {
   return (
     <Card>
       <CardContent className="p-6">
-<<<<<<< HEAD
-        <div className="flex items-start gap-6">
-=======
         {/* Seção de avatar e informações básicas */}
         <div className="flex items-start gap-6">
           {/* Avatar do profissional */}
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
           <Avatar className="h-24 w-24">
             <AvatarImage src={professional.avatar} alt={professional.name} />
             <AvatarFallback>{professional.name.charAt(0)}</AvatarFallback>
           </Avatar>
           
           <div className="flex-1">
-<<<<<<< HEAD
-            <h1 className="text-2xl font-bold mb-2">{professional.name}</h1>
-            
-=======
             {/* Nome do profissional */}
             <h1 className="text-2xl font-bold mb-2">{professional.name}</h1>
             
             {/* Especialidades do profissional */}
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
             <div className="flex flex-wrap gap-2 mb-4">
               {professional.specialties.map((specialty) => (
                 <Badge key={specialty} variant="secondary">{specialty}</Badge>
               ))}
             </div>
             
-<<<<<<< HEAD
-            <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
-=======
             {/* Avaliação e localização */}
             <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
               {/* Estrelas de avaliação */}
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
               <div className="flex items-center">
                 <Star className="h-4 w-4 text-yellow-500 mr-1" />
                 <span>{professional.rating}</span>
                 <span className="ml-1">({professional.totalReviews} avaliações)</span>
               </div>
               
-<<<<<<< HEAD
-=======
               {/* Localização do profissional */}
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
               {professional.address && (
                 <div className="flex items-center">
                   <MapPin className="h-4 w-4 mr-1" />
@@ -77,12 +52,6 @@ export function ProfessionalDetails({ professional }: ProfessionalDetailsProps) 
               )}
             </div>
             
-<<<<<<< HEAD
-            <p className="text-gray-600 mb-6">{professional.description}</p>
-            
-            <Separator className="my-6" />
-            
-=======
             {/* Descrição do profissional */}
             <p className="text-gray-600 mb-6">{professional.description}</p>
             
@@ -90,7 +59,6 @@ export function ProfessionalDetails({ professional }: ProfessionalDetailsProps) 
             <Separator className="my-6" />
             
             {/* Grid de informações adicionais */}
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <h2 className="font-semibold mb-4">Horário de Atendimento</h2>
@@ -120,4 +88,4 @@ export function ProfessionalDetails({ professional }: ProfessionalDetailsProps) 
       </CardContent>
     </Card>
   );
-} 
+}

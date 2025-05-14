@@ -17,7 +17,7 @@ export default defineConfig({
   // Configurações do servidor de desenvolvimento
   server: {
     // Porta do servidor de desenvolvimento
-    port: 3000,
+    port: 8080,
     // Permite acesso externo ao servidor
     host: true,
   },
