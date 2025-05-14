@@ -1,9 +1,6 @@
 
-<<<<<<< HEAD
-=======
 // Componente principal de login administrativo
 // Este componente gerencia a interface de login para administradores
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -14,30 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Home } from 'lucide-react';
 
 const AdminLogin = () => {
-<<<<<<< HEAD
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  // Mock admin credentials - in a real app, this would be authenticated against a secure backend
-  const ADMIN_USER = 'admin';
-  const ADMIN_PASSWORD = 'admin123';
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    // Simple mock authentication
-    setTimeout(() => {
-      if (username === ADMIN_USER && password === ADMIN_PASSWORD) {
-        // Set admin authentication in localStorage
-        localStorage.setItem('adminAuthenticated', 'true');
-        localStorage.setItem('adminLastLogin', new Date().toISOString());
-        
-=======
   // Estados do componente
   const [username, setUsername] = useState(''); // Estado para armazenar o nome de usuário
   const [password, setPassword] = useState(''); // Estado para armazenar a senha
@@ -64,34 +37,23 @@ const AdminLogin = () => {
         localStorage.setItem('adminLastLogin', new Date().toISOString());
         
         // Exibe mensagem de sucesso
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
         toast({
           title: "Login bem-sucedido",
           description: "Bem-vindo ao painel administrativo do Cuide-Se.",
         });
         
-<<<<<<< HEAD
-        navigate('/admin/dashboard');
-      } else {
-=======
         // Redireciona para o dashboard administrativo
         navigate('/admin/dashboard');
       } else {
         // Exibe mensagem de erro
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
         toast({
           variant: "destructive",
           title: "Falha no login",
           description: "Credenciais inválidas. Tente novamente.",
         });
       }
-<<<<<<< HEAD
-      setLoading(false);
-    }, 800); // Simulate network request
-=======
       setLoading(false); // Desativa o estado de carregamento
     }, 800); // Simula um delay de 800ms para a requisição
->>>>>>> c83d66dd46fb5daddadb7b640808220c66dc3f97
   };
 
   return (
@@ -121,7 +83,7 @@ const AdminLogin = () => {
                 <Label htmlFor="username">Nome de usuário</Label>
                 <Input 
                   id="username" 
-                  placeholder="Digite seu nome de usuário (admin)" 
+                  placeholder="Digite seu nome de usuário" 
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -133,7 +95,7 @@ const AdminLogin = () => {
                   <Input 
                     id="password" 
                     type={showPassword ? "text" : "password"} 
-                    placeholder="Digite sua senha (admin123)"
+                    placeholder="Digite sua senha"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -147,11 +109,6 @@ const AdminLogin = () => {
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-              </div>
-              <div className="p-3 bg-blue-50 rounded-md text-sm text-blue-700">
-                <strong>Credenciais de acesso:</strong><br/>
-                Usuário: admin<br/>
-                Senha: admin123
               </div>
             </CardContent>
             <CardFooter>
