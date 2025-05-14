@@ -57,6 +57,7 @@
     "react-native-vector-icons": "^10.0.0"
   },
   "scripts": {
+    "build:dev": "vite build --mode development"
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
