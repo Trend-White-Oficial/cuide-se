@@ -3,9 +3,10 @@ import { renderHook, act } from '@testing-library/react-hooks';
 import { CartProvider, useCart } from '../contexts/CartContext';
 import { AuthProvider } from '../auth/AuthContext';
 import { supabase } from '../supabase';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Mock do supabase
-jest.mock('../supabase', () => ({
+vi.mock('../supabase', () => ({
     from: jest.fn().mockReturnThis(),
     insert: jest.fn().mockReturnThis(),
     delete: jest.fn().mockReturnThis(),
@@ -32,7 +33,7 @@ describe('CartContext', () => {
     };
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     it('deve buscar itens do carrinho corretamente', async () => {
