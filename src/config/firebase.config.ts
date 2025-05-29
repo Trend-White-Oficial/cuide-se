@@ -13,31 +13,31 @@ import { getStorage } from "firebase/storage";
 export const firebaseConfig = {
   // Chave de API principal do projeto Firebase
   // Utilizada para autenticação e acesso aos serviços
-  apiKey: process.env.AIzaSyD1bhaSX9ubSJyWKALNqREuCyO7LFltl1g,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   
   // Domínio de autenticação
   // Usado para redirecionamento após login
-  authDomain: process.env.cuida-se.firebaseapp.com,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   
   // ID único do projeto Firebase
   // Utilizado para identificar o projeto nos serviços
-  projectId: process.env.cuida-se,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   
   // Bucket de armazenamento
   // Utilizado para armazenamento de arquivos (imagens, documentos, etc.)
-  storageBucket: process.env.cuida-se.firebasestorage.app,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   
   // ID do remetente para mensagens
   // Utilizado para envio de notificações push
-  messagingSenderId: process.env.647513724546,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   
   // ID da aplicação
   // Identificador único da aplicação no Firebase
-  appId: process.env.1:647513724546:web:fe6526976b5cc92c94469b,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
   
   // ID de medição para analytics
   // Utilizado para rastreamento de métricas e eventos
-  measurementId: process.env.G-53E49M4GQ3,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 // Inicializa o Firebase com as configurações

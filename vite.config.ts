@@ -29,12 +29,20 @@ export default defineConfig({
   // Configurações do servidor de desenvolvimento
   server: {
     // Porta do servidor de desenvolvimento
-    port: 3000,
+    port: 8080,
     // Permite acesso externo ao servidor
     host: true,
     // Habilita HMR (Hot Module Replacement)
     hmr: {
       overlay: true,
+    },
+    // Configurações de proxy
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
   // Configurações de build
@@ -70,7 +78,17 @@ export default defineConfig({
   },
   // Configurações de preview
   preview: {
-    port: 4173,
+    port: 8080,
     host: true,
+  },
+  // Configurações de teste
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    coverage: {
+      reporter: ['text', 'json', 'html'],
+      exclude: ['node_modules/', 'src/test/setup.ts'],
+    },
   },
 });
