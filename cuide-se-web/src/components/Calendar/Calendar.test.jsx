@@ -1,8 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Calendar from './Calendar';
+import { Calendar } from './Calendar';
 import { CalendarContext } from '../../contexts/CalendarContext';
 import { AuthContext } from '../../contexts/AuthContext';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const mockEvents = [
     {
@@ -27,6 +28,14 @@ const mockEvents = [
     }
 ];
 
+const mockCalendarService = {
+    fetchEvents: vi.fn(),
+    addEvent: vi.fn(),
+    updateEvent: vi.fn(),
+    deleteEvent: vi.fn(),
+    setSelectedDate: vi.fn()
+};
+
 describe('Calendar Component', () => {
     const mockUser = {
         id: '123',
@@ -37,11 +46,11 @@ describe('Calendar Component', () => {
         events: mockEvents,
         selectedDate: new Date('2024-05-10'),
         loading: false,
-        fetchEvents: jest.fn(),
-        addEvent: jest.fn(),
-        updateEvent: jest.fn(),
-        deleteEvent: jest.fn(),
-        setSelectedDate: jest.fn()
+        fetchEvents: mockCalendarService.fetchEvents,
+        addEvent: mockCalendarService.addEvent,
+        updateEvent: mockCalendarService.updateEvent,
+        deleteEvent: mockCalendarService.deleteEvent,
+        setSelectedDate: mockCalendarService.setSelectedDate
     };
 
     const mockAuthContext = {

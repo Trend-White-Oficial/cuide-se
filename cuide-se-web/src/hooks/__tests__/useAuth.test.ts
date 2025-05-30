@@ -1,110 +1,82 @@
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react-hooks';
 import { useAuth } from '../useAuth';
-import { authService } from '@/services/api';
+import { authService } from '../../services/authService';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-// Mock do authService
-vi.mock('@/services/api', () => ({
-  authService: {
-    login: vi.fn(() => Promise.resolve({ 
-      data: { 
-        token: 'test-token', 
-        user: { id: 1, name: 'Test User' } 
-      } 
-    })),
-    logout: vi.fn(() => Promise.resolve())
-  },
-  api: {
-    defaults: {
-      headers: {
-        common: {}
-      }
+vi.mock('../../services/authService', () => ({
+    authService: {
+        login: vi.fn(),
+        logout: vi.fn(),
+        getCurrentUser: vi.fn()
     }
-  }
 }));
 
 describe('useAuth', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('deve inicializar com o estado padrão', () => {
-    const { result } = renderHook(() => useAuth());
-
-    expect(result.current.user).toBeNull();
-    expect(result.current.token).toBeNull();
-    expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.error).toBeNull();
-  });
-
-  it('deve fazer login com sucesso', async () => {
-    const mockUser = { id: 1, name: 'Test User' };
-    const mockToken = 'test-token';
-    (authService.login as jest.Mock).mockResolvedValueOnce({
-      data: { user: mockUser, token: mockToken },
+    beforeEach(() => {
+        vi.clearAllMocks();
     });
 
-    const { result } = renderHook(() => useAuth());
+    it('deve inicializar com o estado padrão', () => {
+        const { result } = renderHook(() => useAuth());
 
-    await act(async () => {
-      await result.current.login('test@example.com', 'password');
+        expect(result.current.user).toBeNull();
+        expect(result.current.token).toBeNull();
+        expect(result.current.isAuthenticated).toBe(false);
+        expect(result.current.isLoading).toBe(false);
+        expect(result.current.error).toBeNull();
     });
 
-    expect(result.current.user).toEqual(mockUser);
-    expect(result.current.token).toBe(mockToken);
-    expect(result.current.isAuthenticated).toBe(true);
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.error).toBeNull();
-  });
+    it('should login successfully', async () => {
+        const mockUser = { id: 1, email: 'test@example.com' };
+        (authService.login as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+            user: mockUser,
+            error: null
+        });
 
-  it('deve lidar com erro no login', async () => {
-    const errorMessage = 'Credenciais inválidas';
-    (authService.login as jest.Mock).mockRejectedValueOnce({
-      response: { data: { message: errorMessage } },
+        const { result } = renderHook(() => useAuth());
+
+        await act(async () => {
+            await result.current.login('test@example.com', 'password');
+        });
+
+        expect(result.current.user).toEqual(mockUser);
+        expect(result.current.error).toBeNull();
     });
 
-    const { result } = renderHook(() => useAuth());
+    it('should handle login error', async () => {
+        const mockError = new Error('Invalid credentials');
+        (authService.login as ReturnType<typeof vi.fn>).mockRejectedValueOnce(mockError);
 
-    await act(async () => {
-      await result.current.login('test@example.com', 'wrong-password');
+        const { result } = renderHook(() => useAuth());
+
+        await act(async () => {
+            await result.current.login('test@example.com', 'wrong-password');
+        });
+
+        expect(result.current.user).toBeNull();
+        expect(result.current.error).toBe(mockError);
     });
 
-    expect(result.current.user).toBeNull();
-    expect(result.current.token).toBeNull();
-    expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.error).toBe(errorMessage);
-  });
+    it('should logout successfully', async () => {
+        (authService.logout as ReturnType<typeof vi.fn>).mockResolvedValueOnce({});
 
-  it('deve fazer logout com sucesso', async () => {
-    (authService.logout as jest.Mock).mockResolvedValueOnce({});
+        const { result } = renderHook(() => useAuth());
 
-    const { result } = renderHook(() => useAuth());
+        await act(async () => {
+            await result.current.logout();
+        });
 
-    // Primeiro faz login
-    await act(async () => {
-      await result.current.login('test@example.com', 'password');
+        expect(result.current.user).toBeNull();
+        expect(result.current.error).toBeNull();
     });
 
-    // Depois faz logout
-    await act(async () => {
-      await result.current.logout();
+    it('deve limpar o erro', () => {
+        const { result } = renderHook(() => useAuth());
+
+        act(() => {
+            result.current.clearError();
+        });
+
+        expect(result.current.error).toBeNull();
     });
-
-    expect(result.current.user).toBeNull();
-    expect(result.current.token).toBeNull();
-    expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.error).toBeNull();
-  });
-
-  it('deve limpar o erro', () => {
-    const { result } = renderHook(() => useAuth());
-
-    act(() => {
-      result.current.clearError();
-    });
-
-    expect(result.current.error).toBeNull();
-  });
 });

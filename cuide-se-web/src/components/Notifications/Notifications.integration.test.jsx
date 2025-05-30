@@ -1,20 +1,19 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Notifications from './Notifications';
-import { NotificationsContext } from '../../contexts/NotificationsContext';
-import { AuthContext } from '../../contexts/AuthContext';
-import { supabase } from '../../supabase';
+import { Notifications } from './Notifications';
+import { AuthProvider } from '../../contexts/AuthContext';
+import { supabase } from '../../services/supabaseService';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-jest.mock('../../supabase', () => ({
-    from: jest.fn().mockReturnThis(),
-    select: jest.fn().mockReturnThis(),
-    insert: jest.fn().mockReturnThis(),
-    update: jest.fn().mockReturnThis(),
-    delete: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    gte: jest.fn().mockReturnThis(),
-    order: jest.fn().mockReturnThis(),
-    single: jest.fn().mockReturnThis()
+// Mock do supabase
+vi.mock('../../services/supabaseService', () => ({
+    supabase: {
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        update: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis()
+    }
 }));
 
 const mockNotifications = [
@@ -41,7 +40,7 @@ describe('Notifications Integration Tests', () => {
     };
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         
         supabase.from.mockReturnValue(supabase);
         supabase.select.mockReturnValue(supabase);
@@ -58,9 +57,9 @@ describe('Notifications Integration Tests', () => {
         supabase.select.mockResolvedValue({ data: mockNotifications });
 
         const { container } = render(
-            <AuthContext.Provider value={{ user: mockUser }}>
+            <AuthProvider value={{ user: mockUser }}>
                 <Notifications />
-            </AuthContext.Provider>
+            </AuthProvider>
         );
 
         await waitFor(() => {
@@ -85,9 +84,9 @@ describe('Notifications Integration Tests', () => {
         supabase.update.mockResolvedValue({ error: null });
 
         const { container } = render(
-            <AuthContext.Provider value={{ user: mockUser }}>
+            <AuthProvider value={{ user: mockUser }}>
                 <Notifications />
-            </AuthContext.Provider>
+            </AuthProvider>
         );
 
         await waitFor(() => {
@@ -107,9 +106,9 @@ describe('Notifications Integration Tests', () => {
         supabase.select.mockResolvedValue({ error: new Error('API Error') });
 
         const { container } = render(
-            <AuthContext.Provider value={{ user: mockUser }}>
+            <AuthProvider value={{ user: mockUser }}>
                 <Notifications />
-            </AuthContext.Provider>
+            </AuthProvider>
         );
 
         await waitFor(() => {
@@ -121,9 +120,9 @@ describe('Notifications Integration Tests', () => {
         supabase.select.mockResolvedValue({ data: mockNotifications });
 
         const { container } = render(
-            <AuthContext.Provider value={{ user: mockUser }}>
+            <AuthProvider value={{ user: mockUser }}>
                 <Notifications />
-            </AuthContext.Provider>
+            </AuthProvider>
         );
 
         expect(screen.getByText('Carregando...')).toBeInTheDocument();

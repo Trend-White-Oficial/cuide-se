@@ -1,17 +1,19 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Follow from './Follow';
-import { FollowContext } from '../../contexts/FollowContext';
-import { AuthContext } from '../../contexts/AuthContext';
-import { supabase } from '../../supabase';
+import { Follow } from './Follow';
+import { AuthProvider } from '../../contexts/AuthContext';
+import { supabase } from '../../services/supabaseService';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-jest.mock('../../supabase', () => ({
-    from: jest.fn().mockReturnThis(),
-    select: jest.fn().mockReturnThis(),
-    insert: jest.fn().mockReturnThis(),
-    delete: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    single: jest.fn().mockReturnThis()
+// Mock do supabase
+vi.mock('../../services/supabaseService', () => ({
+    supabase: {
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        insert: vi.fn().mockReturnThis(),
+        delete: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis()
+    }
 }));
 
 const mockFollowing = [
@@ -34,23 +36,25 @@ describe('Follow Integration Tests', () => {
     };
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         
         supabase.from.mockReturnValue(supabase);
         supabase.select.mockReturnValue(supabase);
         supabase.insert.mockReturnValue(supabase);
         supabase.delete.mockReturnValue(supabase);
         supabase.eq.mockReturnValue(supabase);
-        supabase.single.mockReturnValue(supabase);
+        supabase.order.mockReturnValue(supabase);
+        supabase.update.mockReturnValue(supabase);
+        supabase.rpc.mockReturnValue(supabase);
     });
 
     it('should fetch following on mount', async () => {
         supabase.select.mockResolvedValue({ data: mockFollowing });
 
         const { container } = render(
-            <AuthContext.Provider value={{ user: mockUser }}>
+            <AuthProvider value={{ user: mockUser }}>
                 <Follow perfilId="456" perfil={{ nome_completo: 'Profissional A' }} />
-            </AuthContext.Provider>
+            </AuthProvider>
         );
 
         await waitFor(() => {
@@ -76,9 +80,9 @@ describe('Follow Integration Tests', () => {
         supabase.delete.mockResolvedValue({ error: null });
 
         const { container } = render(
-            <AuthContext.Provider value={{ user: mockUser }}>
+            <AuthProvider value={{ user: mockUser }}>
                 <Follow perfilId="456" perfil={{ nome_completo: 'Profissional A' }} />
-            </AuthContext.Provider>
+            </AuthProvider>
         );
 
         await waitFor(() => {
@@ -113,9 +117,9 @@ describe('Follow Integration Tests', () => {
         supabase.select.mockResolvedValue({ error: new Error('API Error') });
 
         const { container } = render(
-            <AuthContext.Provider value={{ user: mockUser }}>
+            <AuthProvider value={{ user: mockUser }}>
                 <Follow perfilId="456" perfil={{ nome_completo: 'Profissional A' }} />
-            </AuthContext.Provider>
+            </AuthProvider>
         );
 
         await waitFor(() => {
@@ -127,9 +131,9 @@ describe('Follow Integration Tests', () => {
         supabase.select.mockResolvedValue({ data: mockFollowing });
 
         const { container } = render(
-            <AuthContext.Provider value={{ user: mockUser }}>
+            <AuthProvider value={{ user: mockUser }}>
                 <Follow perfilId="456" perfil={{ nome_completo: 'Profissional A' }} />
-            </AuthContext.Provider>
+            </AuthProvider>
         );
 
         expect(screen.getByText('Carregando...')).toBeInTheDocument();

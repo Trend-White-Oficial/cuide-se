@@ -1,18 +1,23 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Calendar from './Calendar';
-import { CalendarContext } from '../../contexts/CalendarContext';
-import { AuthContext } from '../../contexts/AuthContext';
-import { supabase } from '../../supabase';
+import { Calendar } from './Calendar';
+import { AuthProvider } from '../../contexts/AuthContext';
+import { supabase } from '../../services/supabaseService';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-jest.mock('../../supabase', () => ({
-    from: jest.fn().mockReturnThis(),
-    select: jest.fn().mockReturnThis(),
-    insert: jest.fn().mockReturnThis(),
-    update: jest.fn().mockReturnThis(),
-    delete: jest.fn().mockReturnThis(),
-    gte: jest.fn().mockReturnThis(),
-    order: jest.fn().mockReturnThis()
+// Mock do supabase
+vi.mock('../../services/supabaseService', () => ({
+    supabase: {
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        insert: vi.fn().mockReturnThis(),
+        update: vi.fn().mockReturnThis(),
+        delete: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        lte: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis()
+    }
 }));
 
 const mockEvents = [
@@ -35,7 +40,7 @@ describe('Calendar Integration Tests', () => {
     };
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         
         supabase.from.mockReturnValue(supabase);
         supabase.select.mockReturnValue(supabase);
@@ -50,9 +55,9 @@ describe('Calendar Integration Tests', () => {
         supabase.select.mockResolvedValue({ data: mockEvents });
 
         const { container } = render(
-            <AuthContext.Provider value={{ user: mockUser }}>
+            <AuthProvider value={{ user: mockUser }}>
                 <Calendar />
-            </AuthContext.Provider>
+            </AuthProvider>
         );
 
         await waitFor(() => {
@@ -76,9 +81,9 @@ describe('Calendar Integration Tests', () => {
         supabase.insert.mockResolvedValue({ error: null });
 
         const { container } = render(
-            <AuthContext.Provider value={{ user: mockUser }}>
+            <AuthProvider value={{ user: mockUser }}>
                 <Calendar />
-            </AuthContext.Provider>
+            </AuthProvider>
         );
 
         await waitFor(() => {
@@ -106,9 +111,9 @@ describe('Calendar Integration Tests', () => {
         supabase.select.mockResolvedValue({ error: new Error('API Error') });
 
         const { container } = render(
-            <AuthContext.Provider value={{ user: mockUser }}>
+            <AuthProvider value={{ user: mockUser }}>
                 <Calendar />
-            </AuthContext.Provider>
+            </AuthProvider>
         );
 
         await waitFor(() => {
@@ -120,9 +125,9 @@ describe('Calendar Integration Tests', () => {
         supabase.select.mockResolvedValue({ data: mockEvents });
 
         const { container } = render(
-            <AuthContext.Provider value={{ user: mockUser }}>
+            <AuthProvider value={{ user: mockUser }}>
                 <Calendar />
-            </AuthContext.Provider>
+            </AuthProvider>
         );
 
         expect(screen.getByText('Carregando...')).toBeInTheDocument();

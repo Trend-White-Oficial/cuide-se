@@ -6,6 +6,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../App';
 import { theme } from '../theme';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 // Função para buscar dados do profissional e serviço
 async function fetchProfessionalAndService(professionalId: string, serviceId: string) {
@@ -34,10 +35,11 @@ export default function AppointmentScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [selectedDate, setSelectedDate] = useState<string>('');
-  const [selectedTime, setSelectedTime] = useState<string>('');
+  const [date, setDate] = useState(new Date());
+  const [time, setTime] = useState(new Date());
   const [notes, setNotes] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<string>('credit');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   useEffect(() => {
     async function loadProfessionalAndService() {
@@ -78,14 +80,28 @@ export default function AppointmentScreen() {
     );
   }
 
-  const handleConfirmAppointment = () => {
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setDate(selectedDate);
+    }
+  };
+
+  const handleTimeChange = (event: any, selectedTime?: Date) => {
+    setShowTimePicker(false);
+    if (selectedTime) {
+      setTime(selectedTime);
+    }
+  };
+
+  const handleConfirm = () => {
     navigation.navigate('AppointmentConfirmation', {
       professionalId,
       serviceId,
-      date: selectedDate,
-      time: selectedTime,
+      date: date.toISOString(),
+      time: time.toISOString(),
       notes,
-      paymentMethod,
+      paymentMethod: 'cartão',
     });
   };
 
@@ -107,21 +123,39 @@ export default function AppointmentScreen() {
 
       <Card style={styles.section}>
         <Card.Content>
-          <Text style={styles.sectionTitle}>Data e Hora</Text>
-          <TextInput
-            label="Data"
-            value={selectedDate}
-            onChangeText={setSelectedDate}
-            style={styles.input}
-            placeholder="DD/MM/AAAA"
-          />
-          <TextInput
-            label="Horário"
-            value={selectedTime}
-            onChangeText={setSelectedTime}
-            style={styles.input}
-            placeholder="HH:MM"
-          />
+          <Text style={styles.sectionTitle}>Selecione a Data e Hora</Text>
+          <Button
+            mode="outlined"
+            onPress={() => setShowDatePicker(true)}
+            style={styles.button}
+          >
+            Data: {date.toLocaleDateString()}
+          </Button>
+
+          <Button
+            mode="outlined"
+            onPress={() => setShowTimePicker(true)}
+            style={styles.button}
+          >
+            Hora: {time.toLocaleTimeString()}
+          </Button>
+
+          {showDatePicker && (
+            <DateTimePicker
+              value={date}
+              mode="date"
+              onChange={handleDateChange}
+              minimumDate={new Date()}
+            />
+          )}
+
+          {showTimePicker && (
+            <DateTimePicker
+              value={time}
+              mode="time"
+              onChange={handleTimeChange}
+            />
+          )}
         </Card.Content>
       </Card>
 
@@ -139,25 +173,10 @@ export default function AppointmentScreen() {
         </Card.Content>
       </Card>
 
-      <Card style={styles.section}>
-        <Card.Content>
-          <Text style={styles.sectionTitle}>Forma de Pagamento</Text>
-          <RadioButton.Group
-            onValueChange={value => setPaymentMethod(value)}
-            value={paymentMethod}
-          >
-            <RadioButton.Item label="Cartão de Crédito" value="credit" />
-            <RadioButton.Item label="Cartão de Débito" value="debit" />
-            <RadioButton.Item label="PIX" value="pix" />
-          </RadioButton.Group>
-        </Card.Content>
-      </Card>
-
       <Button
         mode="contained"
-        onPress={handleConfirmAppointment}
+        onPress={handleConfirm}
         style={styles.confirmButton}
-        disabled={!selectedDate || !selectedTime}
       >
         Confirmar Agendamento
       </Button>
@@ -200,6 +219,9 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 16,
+  },
+  button: {
+    marginVertical: 8,
   },
   confirmButton: {
     margin: 16,

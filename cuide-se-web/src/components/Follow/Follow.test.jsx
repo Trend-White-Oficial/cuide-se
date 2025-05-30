@@ -1,8 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Follow from './Follow';
+import { Follow } from './Follow';
 import { FollowContext } from '../../contexts/FollowContext';
 import { AuthContext } from '../../contexts/AuthContext';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const mockFollowing = [
     {
@@ -27,6 +28,11 @@ const mockFollowing = [
     }
 ];
 
+const mockFollowService = {
+    fetchFollowing: vi.fn(),
+    toggleFollow: vi.fn()
+};
+
 describe('Follow Component', () => {
     const mockUser = {
         id: '123',
@@ -36,8 +42,8 @@ describe('Follow Component', () => {
     const mockContext = {
         following: mockFollowing,
         loading: false,
-        fetchFollowing: jest.fn(),
-        toggleFollow: jest.fn()
+        fetchFollowing: mockFollowService.fetchFollowing,
+        toggleFollow: mockFollowService.toggleFollow
     };
 
     const mockAuthContext = {

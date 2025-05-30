@@ -1,25 +1,32 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Notifications from './Notifications';
+import { Notifications } from './Notifications';
 import { NotificationsContext } from '../../contexts/NotificationsContext';
 import { AuthContext } from '../../contexts/AuthContext';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const mockNotifications = [
     {
         id: 1,
-        titulo: 'Nova Promoção',
-        mensagem: 'Você tem uma nova promoção disponível',
-        lida: false,
-        created_at: '2024-05-09T18:56:00.000Z'
+        title: 'Notificação 1',
+        message: 'Mensagem da notificação 1',
+        read: false,
+        created_at: '2024-01-01T00:00:00.000Z'
     },
     {
         id: 2,
-        titulo: 'Novo Seguidor',
-        mensagem: 'Usuário X começou a seguir você',
-        lida: true,
-        created_at: '2024-05-08T18:56:00.000Z'
+        title: 'Notificação 2',
+        message: 'Mensagem da notificação 2',
+        read: true,
+        created_at: '2024-01-02T00:00:00.000Z'
     }
 ];
+
+const mockNotificationsService = {
+    fetchNotifications: vi.fn(),
+    markAsRead: vi.fn(),
+    markAllAsRead: vi.fn()
+};
 
 describe('Notifications Component', () => {
     const mockUser = {
@@ -31,9 +38,9 @@ describe('Notifications Component', () => {
         notifications: mockNotifications,
         unreadCount: 1,
         loading: false,
-        fetchNotifications: jest.fn(),
-        markAsRead: jest.fn(),
-        markAllAsRead: jest.fn()
+        fetchNotifications: mockNotificationsService.fetchNotifications,
+        markAsRead: mockNotificationsService.markAsRead,
+        markAllAsRead: mockNotificationsService.markAllAsRead
     };
 
     const mockAuthContext = {
@@ -53,8 +60,8 @@ describe('Notifications Component', () => {
     it('should render notifications list', () => {
         renderComponent();
         
-        expect(screen.getByText('Nova Promoção')).toBeInTheDocument();
-        expect(screen.getByText('Novo Seguidor')).toBeInTheDocument();
+        expect(screen.getByText('Notificação 1')).toBeInTheDocument();
+        expect(screen.getByText('Notificação 2')).toBeInTheDocument();
     });
 
     it('should show correct unread count', () => {
@@ -66,11 +73,11 @@ describe('Notifications Component', () => {
     it('should call markAsRead when notification is clicked', async () => {
         renderComponent();
         
-        const notification = screen.getByText('Nova Promoção');
+        const notification = screen.getByText('Notificação 1');
         fireEvent.click(notification);
         
         await waitFor(() => {
-            expect(mockContext.markAsRead).toHaveBeenCalledWith(1);
+            expect(mockNotificationsService.markAsRead).toHaveBeenCalledWith(1);
         });
     });
 
@@ -81,7 +88,7 @@ describe('Notifications Component', () => {
         fireEvent.click(allButton);
         
         await waitFor(() => {
-            expect(mockContext.markAllAsRead).toHaveBeenCalled();
+            expect(mockNotificationsService.markAllAsRead).toHaveBeenCalled();
         });
     });
 

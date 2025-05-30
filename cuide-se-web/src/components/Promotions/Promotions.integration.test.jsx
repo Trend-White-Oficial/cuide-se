@@ -1,18 +1,21 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Promotions from './Promotions';
-import { PromotionsContext } from '../../contexts/PromotionsContext';
-import { AuthContext } from '../../contexts/AuthContext';
-import { supabase } from '../../supabase';
+import { Promotions } from './Promotions';
+import { AuthProvider } from '../../contexts/AuthContext';
+import { supabase } from '../../services/supabaseService';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-jest.mock('../../supabase', () => ({
-    from: jest.fn().mockReturnThis(),
-    select: jest.fn().mockReturnThis(),
-    insert: jest.fn().mockReturnThis(),
-    update: jest.fn().mockReturnThis(),
-    delete: jest.fn().mockReturnThis(),
-    gte: jest.fn().mockReturnThis(),
-    order: jest.fn().mockReturnThis()
+// Mock do supabase
+vi.mock('../../services/supabaseService', () => ({
+    supabase: {
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        insert: vi.fn().mockReturnThis(),
+        update: vi.fn().mockReturnThis(),
+        delete: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis()
+    }
 }));
 
 const mockPromotions = [
@@ -39,7 +42,7 @@ describe('Promotions Integration Tests', () => {
     };
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         
         supabase.from.mockReturnValue(supabase);
         supabase.select.mockReturnValue(supabase);
@@ -53,10 +56,10 @@ describe('Promotions Integration Tests', () => {
     it('should fetch promotions on mount', async () => {
         supabase.select.mockResolvedValue({ data: mockPromotions });
 
-        const { container } = render(
-            <AuthContext.Provider value={{ user: mockUser }}>
+        render(
+            <AuthProvider value={{ user: mockUser }}>
                 <Promotions />
-            </AuthContext.Provider>
+            </AuthProvider>
         );
 
         await waitFor(() => {
@@ -81,10 +84,10 @@ describe('Promotions Integration Tests', () => {
         supabase.select.mockResolvedValue({ data: mockPromotions });
         supabase.insert.mockResolvedValue({ error: null });
 
-        const { container } = render(
-            <AuthContext.Provider value={{ user: mockUser }}>
+        render(
+            <AuthProvider value={{ user: mockUser }}>
                 <Promotions />
-            </AuthContext.Provider>
+            </AuthProvider>
         );
 
         await waitFor(() => {
@@ -111,10 +114,10 @@ describe('Promotions Integration Tests', () => {
     it('should handle API errors gracefully', async () => {
         supabase.select.mockResolvedValue({ error: new Error('API Error') });
 
-        const { container } = render(
-            <AuthContext.Provider value={{ user: mockUser }}>
+        render(
+            <AuthProvider value={{ user: mockUser }}>
                 <Promotions />
-            </AuthContext.Provider>
+            </AuthProvider>
         );
 
         await waitFor(() => {
@@ -125,10 +128,10 @@ describe('Promotions Integration Tests', () => {
     it('should show loading state while fetching', async () => {
         supabase.select.mockResolvedValue({ data: mockPromotions });
 
-        const { container } = render(
-            <AuthContext.Provider value={{ user: mockUser }}>
+        render(
+            <AuthProvider value={{ user: mockUser }}>
                 <Promotions />
-            </AuthContext.Provider>
+            </AuthProvider>
         );
 
         expect(screen.getByText('Carregando...')).toBeInTheDocument();

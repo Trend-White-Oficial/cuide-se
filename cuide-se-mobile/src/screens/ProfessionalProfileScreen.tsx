@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, Image, StyleSheet, ActivityIndicator } from 'react-native';
-import { Text, Button, Card, Avatar, Chip, Divider } from 'react-native-paper';
+import { Text, Button, Card, Avatar, Chip, Divider, Title, Paragraph } from 'react-native-paper';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
@@ -64,6 +64,13 @@ export default function ProfessionalProfileScreen() {
     );
   }
 
+  const handleSchedule = (serviceId: string) => {
+    navigation.navigate('Appointment', {
+      professionalId: professional.id,
+      serviceId,
+    });
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -83,63 +90,54 @@ export default function ProfessionalProfileScreen() {
         </View>
       </View>
 
-      <View style={styles.content}>
-        <Card style={styles.section}>
-          <Card.Content>
-            <Text style={styles.sectionTitle}>Sobre</Text>
-            <Text style={styles.bio}>{professional.bio}</Text>
-          </Card.Content>
-        </Card>
+      <Card style={styles.card}>
+        <Card.Content>
+          <Title>Sobre</Title>
+          <Paragraph>{professional.description}</Paragraph>
+        </Card.Content>
+      </Card>
 
-        <Card style={styles.section}>
-          <Card.Content>
-            <Text style={styles.sectionTitle}>Serviços</Text>
-            {professional.services.map((service: any) => (
-              <View key={service.id} style={styles.serviceItem}>
-                <View style={styles.serviceInfo}>
-                  <Text style={styles.serviceName}>{service.name}</Text>
-                  <Text style={styles.serviceDuration}>{service.duration} min</Text>
-                </View>
-                <Text style={styles.servicePrice}>
-                  R$ {service.price.toFixed(2)}
-                </Text>
-                <Button
-                  mode="contained"
-                  onPress={() => {
-                    navigation.navigate('Appointment', {
-                      professionalId: professional.id,
-                      serviceId: service.id,
-                    });
-                  }}
-                  style={styles.bookButton}
-                >
-                  Agendar
-                </Button>
-              </View>
-            ))}
-          </Card.Content>
-        </Card>
+      <View style={styles.servicesSection}>
+        <Title style={styles.sectionTitle}>Serviços</Title>
+        {professional.services.map((service: any) => (
+          <Card key={service.id} style={styles.serviceCard}>
+            <Card.Content>
+              <Title>{service.name}</Title>
+              <Paragraph>{service.description}</Paragraph>
+              <Text>R$ {service.price.toFixed(2)}</Text>
+              <Text>{service.duration} minutos</Text>
+            </Card.Content>
+            <Card.Actions>
+              <Button
+                mode="contained"
+                onPress={() => handleSchedule(service.id)}
+              >
+                Agendar
+              </Button>
+            </Card.Actions>
+          </Card>
+        ))}
+      </View>
 
-        <Card style={styles.section}>
-          <Card.Content>
-            <Text style={styles.sectionTitle}>Avaliações</Text>
-            <View style={styles.ratingContainer}>
-              <Text style={styles.rating}>{professional.rating.toFixed(1)}</Text>
-              <Text style={styles.reviewCount}>
-                ({professional.reviews.length} avaliações)
+      <Card style={styles.section}>
+        <Card.Content>
+          <Text style={styles.sectionTitle}>Avaliações</Text>
+          <View style={styles.ratingContainer}>
+            <Text style={styles.rating}>{professional.rating.toFixed(1)}</Text>
+            <Text style={styles.reviewCount}>
+              ({professional.reviews.length} avaliações)
+            </Text>
+          </View>
+          {professional.reviews.map((review: any) => (
+            <View key={review.id} style={styles.reviewItem}>
+              <Text style={styles.reviewComment}>{review.comment}</Text>
+              <Text style={styles.reviewDate}>
+                {new Date(review.createdAt).toLocaleDateString()}
               </Text>
             </View>
-            {professional.reviews.map((review: any) => (
-              <View key={review.id} style={styles.reviewItem}>
-                <Text style={styles.reviewComment}>{review.comment}</Text>
-                <Text style={styles.reviewDate}>
-                  {new Date(review.createdAt).toLocaleDateString()}
-                </Text>
-              </View>
-            ))}
-          </Card.Content>
-        </Card>
-      </View>
+          ))}
+        </Card.Content>
+      </Card>
     </ScrollView>
   );
 }
@@ -177,47 +175,17 @@ const styles = StyleSheet.create({
     marginTop: 4,
     backgroundColor: theme.colors.primary,
   },
-  content: {
+  card: {
+    margin: 16,
+  },
+  servicesSection: {
     padding: 16,
   },
-  section: {
-    marginBottom: 16,
-  },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  bio: {
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  serviceItem: {
     marginBottom: 16,
-    padding: 12,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
   },
-  serviceInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  serviceName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  serviceDuration: {
-    color: theme.colors.placeholder,
-  },
-  servicePrice: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
-    marginBottom: 8,
-  },
-  bookButton: {
-    marginTop: 8,
+  serviceCard: {
+    marginBottom: 16,
   },
   ratingContainer: {
     flexDirection: 'row',

@@ -1,39 +1,35 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Promotions from './Promotions';
+import { Promotions } from './Promotions';
 import { PromotionsContext } from '../../contexts/PromotionsContext';
 import { AuthContext } from '../../contexts/AuthContext';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const mockPromotions = [
     {
         id: 1,
-        titulo: 'Promoção de Manutenção',
-        descricao: '50% de desconto na primeira manutenção',
-        valor_original: 200.00,
-        valor_promocional: 100.00,
-        data_inicio: '2024-05-09T18:56:00.000Z',
-        data_fim: '2024-05-15T18:56:00.000Z',
-        perfil: {
-            nome_completo: 'Profissional A',
-            foto_perfil_url: 'https://example.com/profissional-a.jpg',
-            especialidade: 'Manicure'
-        }
+        title: 'Promoção 1',
+        description: 'Descrição da promoção 1',
+        discount: 10,
+        start_date: '2024-01-01',
+        end_date: '2024-12-31'
     },
     {
         id: 2,
-        titulo: 'Combo de Cabelo',
-        descricao: 'Corte + Escova + Hidratação',
-        valor_original: 300.00,
-        valor_promocional: 250.00,
-        data_inicio: '2024-05-10T18:56:00.000Z',
-        data_fim: '2024-05-20T18:56:00.000Z',
-        perfil: {
-            nome_completo: 'Profissional B',
-            foto_perfil_url: 'https://example.com/profissional-b.jpg',
-            especialidade: 'Cabeleireiro'
-        }
+        title: 'Promoção 2',
+        description: 'Descrição da promoção 2',
+        discount: 20,
+        start_date: '2024-01-01',
+        end_date: '2024-12-31'
     }
 ];
+
+const mockPromotionsService = {
+    fetchPromotions: vi.fn(),
+    addPromotion: vi.fn(),
+    updatePromotion: vi.fn(),
+    deletePromotion: vi.fn()
+};
 
 describe('Promotions Component', () => {
     const mockUser = {
@@ -44,10 +40,10 @@ describe('Promotions Component', () => {
     const mockContext = {
         promotions: mockPromotions,
         loading: false,
-        fetchPromotions: jest.fn(),
-        addPromotion: jest.fn(),
-        updatePromotion: jest.fn(),
-        deletePromotion: jest.fn()
+        fetchPromotions: mockPromotionsService.fetchPromotions,
+        addPromotion: mockPromotionsService.addPromotion,
+        updatePromotion: mockPromotionsService.updatePromotion,
+        deletePromotion: mockPromotionsService.deletePromotion
     };
 
     const mockAuthContext = {
