@@ -5,16 +5,21 @@ import { authService } from '@/services/api';
 // Mock do authService
 vi.mock('@/services/api', () => ({
   authService: {
-    login: vi.fn(() => Promise.resolve({ data: { token: 'test-token', user: { id: 1, name: 'Test User' } } })),
-    logout: vi.fn(() => Promise.resolve()),
+    login: vi.fn(() => Promise.resolve({ 
+      data: { 
+        token: 'test-token', 
+        user: { id: 1, name: 'Test User' } 
+      } 
+    })),
+    logout: vi.fn(() => Promise.resolve())
   },
   api: {
     defaults: {
       headers: {
-        common: {},
-      },
-    },
-  },
+        common: {}
+      }
+    }
+  }
 }));
 
 describe('useAuth', () => {
