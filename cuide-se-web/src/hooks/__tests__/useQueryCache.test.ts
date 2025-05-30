@@ -2,11 +2,18 @@ import { renderHook, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useQueryCache } from '../useQueryCache';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
 
 describe('useQueryCache', () => {
   beforeEach(() => {
     localStorage.clear();
+    queryClient.clear();
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -15,7 +22,6 @@ describe('useQueryCache', () => {
 
   it('deve inicializar com cache vazio', () => {
     const { result } = renderHook(() => useQueryCache(), { wrapper });
-
     expect(result.current.getCachedData('test-key')).toBeNull();
   });
 
@@ -47,7 +53,7 @@ describe('useQueryCache', () => {
     const testData = { id: 1, name: 'Test' };
 
     act(() => {
-      result.current.setCachedData('test-key', testData, 0); // TTL de 0 para expirar imediatamente
+      result.current.setCachedData('test-key', testData, 0);
     });
 
     expect(result.current.getCachedData('test-key')).toBeNull();
@@ -58,7 +64,7 @@ describe('useQueryCache', () => {
     const testData = { id: 1, name: 'Test' };
 
     act(() => {
-      result.current.setCachedData('test-key', testData, 3600); // TTL de 1 hora
+      result.current.setCachedData('test-key', testData, 3600);
     });
 
     expect(result.current.getCachedData('test-key')).toEqual(testData);

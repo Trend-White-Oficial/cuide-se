@@ -15,7 +15,7 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["cuide-se-web/src/*"]
     },
     "types": ["vitest/globals", "node"],
     "noUnusedLocals": true,
@@ -23,6 +23,6 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "vite.config.ts", "vitest.config.ts"],
+  "include": ["cuide-se-web/src", "vite.config.ts", "vitest.config.ts"],
   "exclude": ["node_modules", "dist", "build", "coverage"]
 }
