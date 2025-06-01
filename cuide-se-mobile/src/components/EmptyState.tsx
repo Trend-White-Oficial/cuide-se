@@ -6,40 +6,102 @@ import {
   ViewStyle,
   TextStyle,
   TouchableOpacity,
+  Image,
+  ImageSourcePropType,
 } from 'react-native';
-import { THEME_CONFIG } from '../config';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface EmptyStateProps {
-  message: string;
-  actionText?: string;
-  onAction?: () => void;
+  title: string;
+  description?: string;
+  image?: ImageSourcePropType;
+  buttonText?: string;
+  onPress?: () => void;
   containerStyle?: ViewStyle;
-  messageStyle?: TextStyle;
-  actionStyle?: ViewStyle;
-  actionTextStyle?: TextStyle;
+  titleStyle?: TextStyle;
+  descriptionStyle?: TextStyle;
+  buttonStyle?: ViewStyle;
+  buttonTextStyle?: TextStyle;
+  imageStyle?: ViewStyle;
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
-  message,
-  actionText,
-  onAction,
+  title,
+  description,
+  image,
+  buttonText,
+  onPress,
   containerStyle,
-  messageStyle,
-  actionStyle,
-  actionTextStyle,
+  titleStyle,
+  descriptionStyle,
+  buttonStyle,
+  buttonTextStyle,
+  imageStyle,
 }) => {
+  const { colors } = useTheme();
+
   return (
-    <View style={[styles.container, containerStyle]}>
-      <Text style={[styles.message, messageStyle]}>
-        {message}
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.background,
+        },
+        containerStyle,
+      ]}
+    >
+      {image && (
+        <Image
+          source={image}
+          style={[styles.image, imageStyle]}
+          resizeMode="contain"
+        />
+      )}
+      <Text
+        style={[
+          styles.title,
+          {
+            color: colors.text,
+          },
+          titleStyle,
+        ]}
+      >
+        {title}
       </Text>
-      {actionText && onAction && (
-        <TouchableOpacity
-          onPress={onAction}
-          style={[styles.actionButton, actionStyle]}
+      {description && (
+        <Text
+          style={[
+            styles.description,
+            {
+              color: colors.textSecondary,
+            },
+            descriptionStyle,
+          ]}
         >
-          <Text style={[styles.actionText, actionTextStyle]}>
-            {actionText}
+          {description}
+        </Text>
+      )}
+      {buttonText && onPress && (
+        <TouchableOpacity
+          style={[
+            styles.button,
+            {
+              backgroundColor: colors.primary,
+            },
+            buttonStyle,
+          ]}
+          onPress={onPress}
+        >
+          <Text
+            style={[
+              styles.buttonText,
+              {
+                color: colors.white,
+              },
+              buttonTextStyle,
+            ]}
+          >
+            {buttonText}
           </Text>
         </TouchableOpacity>
       )}
@@ -49,25 +111,36 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 24,
+  },
+  image: {
+    width: 200,
+    height: 200,
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  description: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  button: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  message: {
-    color: THEME_CONFIG.textColor + '80',
+  buttonText: {
     fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  actionButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    backgroundColor: THEME_CONFIG.primaryColor,
-  },
-  actionText: {
-    color: '#FFFFFF',
-    fontSize: 14,
     fontWeight: '600',
   },
 }); 
