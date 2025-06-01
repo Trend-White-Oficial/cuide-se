@@ -1,102 +1,149 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
+  Button,
   Card,
   CardContent,
+  Container,
   TextField,
-  Button,
   Typography,
+  Link,
   Alert,
-  CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 
-export const Login: React.FC = () => {
+const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const location = useLocation();
+  const { signIn, signUp } = useAuth();
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('client');
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setLoading(true);
 
     try {
-      await signIn(email, password);
-      navigate('/dashboard');
-    } catch (err) {
-      setError('Email ou senha inválidos');
-    } finally {
-      setLoading(false);
+      if (isLogin) {
+        await signIn(email, password);
+        const from = (location.state as any)?.from?.pathname || '/';
+        navigate(from, { replace: true });
+      } else {
+        await signUp(email, password, name, role);
+        setIsLogin(true);
+        setError('Cadastro realizado com sucesso! Faça login para continuar.');
+      }
+    } catch (error: any) {
+      setError(error.message);
     }
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        bgcolor: 'background.default',
-        p: 2,
-      }}
-    >
-      <Card sx={{ maxWidth: 400, width: '100%' }}>
-        <CardContent sx={{ p: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom align="center">
-            Cuide-se
-          </Typography>
-          <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 4 }}>
-            Faça login para acessar o sistema
-          </Typography>
+    <Container component="main" maxWidth="xs">
+      <Box
+        sx={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Card sx={{ width: '100%' }}>
+          <CardContent>
+            <Typography component="h1" variant="h5" align="center" gutterBottom>
+              {isLogin ? 'Login' : 'Cadastro'}
+            </Typography>
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
+            {error && (
+              <Alert severity={error.includes('sucesso') ? 'success' : 'error'} sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
 
-          <form onSubmit={handleSubmit}>
-            <TextField
-              label="Email"
-              type="email"
-              fullWidth
-              margin="normal"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={loading}
-            />
+            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+              {!isLogin && (
+                <>
+                  <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    label="Nome"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                  <FormControl fullWidth margin="normal">
+                    <InputLabel>Função</InputLabel>
+                    <Select
+                      value={role}
+                      label="Função"
+                      onChange={(e) => setRole(e.target.value)}
+                    >
+                      <MenuItem value="admin">Administrador</MenuItem>
+                      <MenuItem value="professional">Profissional</MenuItem>
+                      <MenuItem value="client">Cliente</MenuItem>
+                    </Select>
+                  </FormControl>
+                </>
+              )}
 
-            <TextField
-              label="Senha"
-              type="password"
-              fullWidth
-              margin="normal"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={loading}
-            />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                label="E-mail"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
 
-            <Button
-              type="submit"
-              variant="contained"
-              fullWidth
-              size="large"
-              sx={{ mt: 3 }}
-              disabled={loading}
-            >
-              {loading ? <CircularProgress size={24} /> : 'Entrar'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </Box>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                label="Senha"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2 }}
+              >
+                {isLogin ? 'Entrar' : 'Cadastrar'}
+              </Button>
+
+              <Box sx={{ textAlign: 'center' }}>
+                <Link
+                  component="button"
+                  variant="body2"
+                  onClick={() => {
+                    setIsLogin(!isLogin);
+                    setError(null);
+                  }}
+                >
+                  {isLogin
+                    ? 'Não tem uma conta? Cadastre-se'
+                    : 'Já tem uma conta? Faça login'}
+                </Link>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
+    </Container>
   );
-}; 
+};
+
+export default Login; 

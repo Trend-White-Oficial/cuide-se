@@ -10,10 +10,12 @@ import {
   Divider,
   IconButton,
   ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
   useTheme,
   useMediaQuery,
+  CssBaseline,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -26,6 +28,9 @@ import {
   Loyalty as LoyaltyIcon,
   People as ProfessionalsIcon,
   Settings as SettingsIcon,
+  Group as ClientsIcon,
+  Spa as ServicesIcon,
+  Person as UsersIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -37,9 +42,12 @@ const menuItems = [
   { text: 'Estoque', icon: <InventoryIcon />, path: '/inventory' },
   { text: 'Comandas', icon: <OrdersIcon />, path: '/orders' },
   { text: 'Relatórios', icon: <ReportsIcon />, path: '/reports' },
-  { text: 'Pacotes', icon: <PackagesIcon />, path: '/packages' },
-  { text: 'Fidelidade', icon: <LoyaltyIcon />, path: '/loyalty' },
+  { text: 'Pacotes de Serviços', icon: <PackagesIcon />, path: '/service-packages' },
+  { text: 'Programa de Fidelidade', icon: <LoyaltyIcon />, path: '/loyalty-program' },
   { text: 'Profissionais', icon: <ProfessionalsIcon />, path: '/professionals' },
+  { text: 'Clientes', icon: <ClientsIcon />, path: '/clients' },
+  { text: 'Serviços', icon: <ServicesIcon />, path: '/services' },
+  { text: 'Usuários', icon: <UsersIcon />, path: '/users' },
   { text: 'Configurações', icon: <SettingsIcon />, path: '/settings' },
 ];
 
@@ -65,19 +73,17 @@ const AdminLayout: React.FC = () => {
       <Divider />
       <List>
         {menuItems.map((item) => (
-          <ListItem
-            button
-            key={item.text}
-            onClick={() => {
-              navigate(item.path);
-              if (isMobile) {
+          <ListItem key={item.text} disablePadding>
+            <ListItemButton
+              selected={location.pathname === item.path}
+              onClick={() => {
+                navigate(item.path);
                 setMobileOpen(false);
-              }
-            }}
-            selected={location.pathname === item.path}
-          >
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.text} />
+              }}
+            >
+              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.text} />
+            </ListItemButton>
           </ListItem>
         ))}
       </List>
@@ -86,6 +92,7 @@ const AdminLayout: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex' }}>
+      <CssBaseline />
       <AppBar
         position="fixed"
         sx={{
@@ -107,7 +114,7 @@ const AdminLayout: React.FC = () => {
             {menuItems.find((item) => item.path === location.pathname)?.text || 'Dashboard'}
           </Typography>
           <Typography variant="body1" sx={{ mr: 2 }}>
-            {user?.name}
+            {user?.email}
           </Typography>
           <IconButton color="inherit" onClick={signOut}>
             <SettingsIcon />
