@@ -1,11 +1,26 @@
 import React from 'react';
-import { AuthProvider } from './src/contexts/AuthContext';
-import { Routes } from './src/routes';
+import { StatusBar } from 'react-native';
+import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
+import { Navigation } from './src/navigation';
+
+const AppContent = () => {
+  const { colors, isDark } = useTheme();
+
+  return (
+    <>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+      />
+      <Navigation />
+    </>
+  );
+};
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Routes />
-    </AuthProvider>
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }

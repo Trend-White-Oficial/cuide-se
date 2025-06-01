@@ -7,7 +7,7 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { THEME_CONFIG } from '../config';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ButtonProps {
   title: string;
@@ -30,35 +30,37 @@ export const Button: React.FC<ButtonProps> = ({
   style,
   textStyle,
 }) => {
+  const { colors } = useTheme();
+
   const getBackgroundColor = () => {
-    if (disabled) return THEME_CONFIG.textColor + '40';
+    if (disabled) return colors.disabled;
     switch (variant) {
       case 'primary':
-        return THEME_CONFIG.primaryColor;
+        return colors.primary;
       case 'secondary':
-        return THEME_CONFIG.secondaryColor;
+        return colors.secondary;
       case 'outline':
         return 'transparent';
       default:
-        return THEME_CONFIG.primaryColor;
+        return colors.primary;
     }
   };
 
   const getTextColor = () => {
-    if (disabled) return THEME_CONFIG.textColor + '80';
+    if (disabled) return colors.placeholder;
     switch (variant) {
       case 'outline':
-        return THEME_CONFIG.primaryColor;
+        return colors.primary;
       default:
-        return '#FFFFFF';
+        return colors.background;
     }
   };
 
   const getBorderColor = () => {
-    if (disabled) return THEME_CONFIG.textColor + '40';
+    if (disabled) return colors.disabled;
     switch (variant) {
       case 'outline':
-        return THEME_CONFIG.primaryColor;
+        return colors.primary;
       default:
         return 'transparent';
     }

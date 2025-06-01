@@ -8,7 +8,7 @@ import {
   TextStyle,
   TextInputProps,
 } from 'react-native';
-import { THEME_CONFIG } from '../config';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -28,24 +28,30 @@ export const Input: React.FC<InputProps> = ({
   errorStyle,
   ...props
 }) => {
+  const { colors } = useTheme();
+
   return (
     <View style={[styles.container, containerStyle]}>
       {label && (
-        <Text style={[styles.label, labelStyle]}>
+        <Text style={[styles.label, { color: colors.text }, labelStyle]}>
           {label}
         </Text>
       )}
       <TextInput
         style={[
           styles.input,
-          error && styles.inputError,
+          {
+            color: colors.text,
+            backgroundColor: colors.card,
+            borderColor: error ? colors.error : colors.border,
+          },
           inputStyle,
         ]}
-        placeholderTextColor={THEME_CONFIG.textColor + '80'}
+        placeholderTextColor={colors.placeholder}
         {...props}
       />
       {error && (
-        <Text style={[styles.error, errorStyle]}>
+        <Text style={[styles.error, { color: colors.error }, errorStyle]}>
           {error}
         </Text>
       )}
@@ -59,25 +65,17 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    color: THEME_CONFIG.textColor,
     marginBottom: 8,
     fontWeight: '500',
   },
   input: {
     height: 48,
     borderWidth: 1,
-    borderColor: THEME_CONFIG.textColor + '40',
     borderRadius: 8,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: THEME_CONFIG.textColor,
-    backgroundColor: THEME_CONFIG.backgroundColor,
-  },
-  inputError: {
-    borderColor: THEME_CONFIG.errorColor,
   },
   error: {
-    color: THEME_CONFIG.errorColor,
     fontSize: 14,
     marginTop: 4,
   },

@@ -1,103 +1,180 @@
-import { useState, useCallback, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useState, useCallback } from 'react';
+import { useStorage } from './useStorage';
+
+interface CacheOptions {
+  ttl?: number; // Tempo de vida em milissegundos
+  staleTime?: number; // Tempo em que os dados são considerados frescos
+}
 
 interface CacheItem<T> {
   data: T;
   timestamp: number;
+  expiresAt?: number;
 }
 
-interface CacheConfig {
-  key: string;
-  ttl?: number; // Time to live in milliseconds
+interface CacheState {
+  [key: string]: CacheItem<any>;
 }
 
-export const useQueryCache = <T>({ key, ttl = 5 * 60 * 1000 }: CacheConfig) => {
-  const [data, setData] = useState<T | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+export const useQueryCache = () => {
+  const { getItem, setItem, removeItem } = useStorage();
+  const [cache, setCache] = useState<CacheState>({});
 
-  const getCacheKey = useCallback(() => {
-    return `@CuideSe:cache:${key}`;
-  }, [key]);
+  // Obtém um item do cache
+  const getCacheItem = useCallback(
+    async <T>(key: string): Promise<T | null> => {
+      try {
+        // Tenta obter do estado
+        const cachedItem = cache[key];
+        if (cachedItem) {
+          if (cachedItem.expiresAt && Date.now() > cachedItem.expiresAt) {
+            // Item expirado
+            removeCacheItem(key);
+            return null;
+          }
+          return cachedItem.data as T;
+        }
 
-  const getCachedData = useCallback(async (): Promise<T | null> => {
-    try {
-      const cachedData = await AsyncStorage.getItem(getCacheKey());
-      if (!cachedData) return null;
+        // Tenta obter do armazenamento
+        const storedItem = await getItem<CacheItem<T>>(`@CuideSe:cache:${key}`);
+        if (storedItem) {
+          if (storedItem.expiresAt && Date.now() > storedItem.expiresAt) {
+            // Item expirado
+            removeCacheItem(key);
+            return null;
+          }
+          // Atualiza o estado
+          setCache(prev => ({ ...prev, [key]: storedItem }));
+          return storedItem.data;
+        }
 
-      const { data, timestamp }: CacheItem<T> = JSON.parse(cachedData);
-      const now = Date.now();
-
-      if (ttl && now - timestamp > ttl) {
-        await AsyncStorage.removeItem(getCacheKey());
+        return null;
+      } catch (error) {
+        console.error('Erro ao obter item do cache:', error);
         return null;
       }
+    },
+    [cache, getItem, removeItem]
+  );
 
-      return data;
-    } catch (error) {
-      console.error('Erro ao recuperar cache:', error);
-      return null;
-    }
-  }, [getCacheKey, ttl]);
+  // Define um item no cache
+  const setCacheItem = useCallback(
+    async <T>(key: string, data: T, options?: CacheOptions): Promise<void> => {
+      try {
+        const now = Date.now();
+        const item: CacheItem<T> = {
+          data,
+          timestamp: now,
+          expiresAt: options?.ttl ? now + options.ttl : undefined,
+        };
 
-  const setCachedData = useCallback(async (newData: T) => {
+        // Atualiza o estado
+        setCache(prev => ({ ...prev, [key]: item }));
+
+        // Salva no armazenamento
+        await setItem(`@CuideSe:cache:${key}`, item);
+      } catch (error) {
+        console.error('Erro ao definir item no cache:', error);
+      }
+    },
+    [setItem]
+  );
+
+  // Remove um item do cache
+  const removeCacheItem = useCallback(
+    async (key: string): Promise<void> => {
+      try {
+        // Remove do estado
+        setCache(prev => {
+          const newCache = { ...prev };
+          delete newCache[key];
+          return newCache;
+        });
+
+        // Remove do armazenamento
+        await removeItem(`@CuideSe:cache:${key}`);
+      } catch (error) {
+        console.error('Erro ao remover item do cache:', error);
+      }
+    },
+    [removeItem]
+  );
+
+  // Limpa todo o cache
+  const clearCache = useCallback(async (): Promise<void> => {
     try {
-      const cacheItem: CacheItem<T> = {
-        data: newData,
-        timestamp: Date.now(),
-      };
+      // Limpa o estado
+      setCache({});
 
-      await AsyncStorage.setItem(getCacheKey(), JSON.stringify(cacheItem));
-      setData(newData);
-    } catch (error) {
-      console.error('Erro ao salvar cache:', error);
-    }
-  }, [getCacheKey]);
-
-  const clearCache = useCallback(async () => {
-    try {
-      await AsyncStorage.removeItem(getCacheKey());
-      setData(null);
+      // Limpa o armazenamento
+      const keys = await getItem<string[]>('@CuideSe:cache:keys');
+      if (keys) {
+        await Promise.all(keys.map(key => removeItem(`@CuideSe:cache:${key}`)));
+        await removeItem('@CuideSe:cache:keys');
+      }
     } catch (error) {
       console.error('Erro ao limpar cache:', error);
     }
-  }, [getCacheKey]);
+  }, [getItem, removeItem]);
 
-  const fetchData = useCallback(async (fetcher: () => Promise<T>) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Tenta recuperar do cache primeiro
-      const cachedData = await getCachedData();
-      if (cachedData) {
-        setData(cachedData);
-        setIsLoading(false);
-        return;
+  // Verifica se um item está no cache
+  const hasCacheItem = useCallback(
+    async (key: string): Promise<boolean> => {
+      try {
+        const item = await getCacheItem(key);
+        return item !== null;
+      } catch (error) {
+        console.error('Erro ao verificar item no cache:', error);
+        return false;
       }
+    },
+    [getCacheItem]
+  );
 
-      // Se não houver cache, faz a requisição
-      const newData = await fetcher();
-      await setCachedData(newData);
-    } catch (error) {
-      setError(error instanceof Error ? error : new Error('Erro desconhecido'));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [getCachedData, setCachedData]);
+  // Verifica se um item está expirado
+  const isCacheItemExpired = useCallback(
+    async (key: string): Promise<boolean> => {
+      try {
+        const item = await getCacheItem(key);
+        if (!item) return true;
 
-  useEffect(() => {
-    // Limpa o cache quando o componente é desmontado
-    return () => {
-      clearCache();
-    };
-  }, [clearCache]);
+        const cachedItem = cache[key];
+        return cachedItem?.expiresAt ? Date.now() > cachedItem.expiresAt : false;
+      } catch (error) {
+        console.error('Erro ao verificar expiração do item:', error);
+        return true;
+      }
+    },
+    [cache, getCacheItem]
+  );
+
+  // Verifica se um item está obsoleto
+  const isCacheItemStale = useCallback(
+    async (key: string, staleTime?: number): Promise<boolean> => {
+      try {
+        const item = await getCacheItem(key);
+        if (!item) return true;
+
+        const cachedItem = cache[key];
+        if (!cachedItem) return true;
+
+        const staleTimeMs = staleTime || 0;
+        return Date.now() - cachedItem.timestamp > staleTimeMs;
+      } catch (error) {
+        console.error('Erro ao verificar obsolescência do item:', error);
+        return true;
+      }
+    },
+    [cache, getCacheItem]
+  );
 
   return {
-    data,
-    isLoading,
-    error,
-    fetchData,
+    getCacheItem,
+    setCacheItem,
+    removeCacheItem,
     clearCache,
+    hasCacheItem,
+    isCacheItemExpired,
+    isCacheItemStale,
   };
 }; 

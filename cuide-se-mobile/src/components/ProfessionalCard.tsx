@@ -40,7 +40,6 @@ export function ProfessionalCard({ professional, onPress }: ProfessionalCardProp
           <Text style={styles.bio} numberOfLines={2}>
             {professional.bio}
           </Text>
-          
           <Text style={styles.location}>
             {professional.location}
           </Text>

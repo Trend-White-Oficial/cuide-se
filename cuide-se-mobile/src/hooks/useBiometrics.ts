@@ -1,104 +1,85 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import * as LocalAuthentication from 'expo-local-authentication';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
-interface BiometricPermission {
-  granted: boolean;
-  status: LocalAuthentication.AuthenticationType[];
+interface BiometricsState {
+  isAvailable: boolean;
+  isEnrolled: boolean;
+  type: LocalAuthentication.AuthenticationType[];
+  loading: boolean;
+  error: string | null;
 }
 
 export const useBiometrics = () => {
-  const [permission, setPermission] = useState<BiometricPermission>({
-    granted: false,
-    status: [],
+  const [state, setState] = useState<BiometricsState>({
+    isAvailable: false,
+    isEnrolled: false,
+    type: [],
+    loading: true,
+    error: null,
   });
 
-  const [isAvailable, setIsAvailable] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  useEffect(() => {
+    checkBiometrics();
+  }, []);
 
-  const checkAvailability = useCallback(async () => {
+  const checkBiometrics = useCallback(async () => {
     try {
-      const [hasHardware, isEnrolled] = await Promise.all([
+      setState(prev => ({ ...prev, loading: true, error: null }));
+
+      const [isAvailable, isEnrolled, type] = await Promise.all([
         LocalAuthentication.hasHardwareAsync(),
         LocalAuthentication.isEnrolledAsync(),
+        LocalAuthentication.supportedAuthenticationTypesAsync(),
       ]);
 
-      const available = hasHardware && isEnrolled;
-      setIsAvailable(available);
-
-      return available;
+      setState({
+        isAvailable,
+        isEnrolled,
+        type,
+        loading: false,
+        error: null,
+      });
     } catch (error) {
-      console.error('Erro ao verificar disponibilidade biométrica:', error);
-      return false;
-    }
-  }, []);
-
-  const getSupportedTypes = useCallback(async () => {
-    try {
-      const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
-      setPermission(prev => ({
+      setState(prev => ({
         ...prev,
-        status: types,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Erro ao verificar biometria',
       }));
-      return types;
-    } catch (error) {
-      console.error('Erro ao obter tipos de autenticação suportados:', error);
-      return [];
     }
   }, []);
 
-  const authenticate = useCallback(async (options: LocalAuthentication.AuthenticationOptions = {}) => {
+  const authenticate = useCallback(async (): Promise<boolean> => {
     try {
-      setIsLoading(true);
-      setError(null);
+      setState(prev => ({ ...prev, loading: true, error: null }));
 
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage: 'Autentique-se para continuar',
         fallbackLabel: 'Usar senha',
-        ...options,
+        cancelLabel: 'Cancelar',
+        disableDeviceFallback: false,
       });
 
-      if (result.success) {
-        await AsyncStorage.setItem('@CuideSe:biometrics:lastAuth', Date.now().toString());
-      }
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: null,
+      }));
 
-      return result;
+      return result.success;
     } catch (error) {
-      setError(error instanceof Error ? error : new Error('Erro desconhecido'));
-      throw error;
-    } finally {
-      setIsLoading(false);
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Erro na autenticação biométrica',
+      }));
+
+      return false;
     }
   }, []);
-
-  const cancelAuthentication = useCallback(async () => {
-    try {
-      await LocalAuthentication.cancelAuthenticate();
-    } catch (error) {
-      console.error('Erro ao cancelar autenticação:', error);
-    }
-  }, []);
-
-  useEffect(() => {
-    const checkBiometrics = async () => {
-      const available = await checkAvailability();
-      if (available) {
-        await getSupportedTypes();
-      }
-    };
-
-    checkBiometrics();
-  }, [checkAvailability, getSupportedTypes]);
 
   return {
-    permission,
-    isAvailable,
-    error,
-    isLoading,
-    checkAvailability,
-    getSupportedTypes,
+    ...state,
     authenticate,
-    cancelAuthentication,
   };
 }; 

@@ -1,142 +1,382 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../lib/supabase';
+import { useAuth } from './useAuth';
 
-interface NotificationConfig {
+interface Notification {
+  id: string;
+  user_id: string;
   title: string;
   body: string;
-  data?: Record<string, any>;
+  data?: any;
+  read: boolean;
+  created_at: string;
 }
 
-interface NotificationPermission {
-  granted: boolean;
-  status: Notifications.PermissionStatus;
+interface CreateNotificationData {
+  title: string;
+  body: string;
+  data?: any;
+}
+
+interface NotificationState {
+  token: string | null;
+  permission: boolean;
+  loading: boolean;
+  error: string | null;
 }
 
 export const useNotifications = () => {
-  const [permission, setPermission] = useState<NotificationPermission>({
-    granted: false,
-    status: 'undetermined',
+  const { user } = useAuth();
+  const [state, setState] = useState<NotificationState>({
+    token: null,
+    permission: false,
+    loading: true,
+    error: null,
   });
 
-  const requestPermission = useCallback(async () => {
+  useEffect(() => {
+    checkPermissions();
+  }, []);
+
+  const checkPermissions = useCallback(async () => {
     try {
-      const { status } = await Notifications.requestPermissionsAsync();
-      const granted = status === 'granted';
+      setState(prev => ({ ...prev, loading: true, error: null }));
 
-      setPermission({
-        granted,
-        status,
-      });
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      const permission = existingStatus === 'granted';
 
-      if (granted) {
-        await AsyncStorage.setItem('@CuideSe:notifications:permission', 'granted');
+      if (!permission) {
+        const { status } = await Notifications.requestPermissionsAsync();
+        setState(prev => ({
+          ...prev,
+          permission: status === 'granted',
+          loading: false,
+        }));
+      } else {
+        setState(prev => ({
+          ...prev,
+          permission,
+          loading: false,
+        }));
       }
 
-      return granted;
+      if (permission) {
+        const token = await registerForPushNotifications();
+        setState(prev => ({
+          ...prev,
+          token,
+        }));
+      }
     } catch (error) {
-      console.error('Erro ao solicitar permissão de notificações:', error);
-      return false;
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Erro ao verificar permissões',
+      }));
     }
   }, []);
 
-  const checkPermission = useCallback(async () => {
+  const registerForPushNotifications = useCallback(async () => {
     try {
-      const { status } = await Notifications.getPermissionsAsync();
-      const granted = status === 'granted';
+      const token = (await Notifications.getExpoPushTokenAsync()).data;
 
-      setPermission({
-        granted,
-        status,
-      });
+      if (Platform.OS === 'android') {
+        await Notifications.setNotificationChannelAsync('default', {
+          name: 'default',
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#FF231F7C',
+        });
+      }
 
-      return granted;
+      return token;
     } catch (error) {
-      console.error('Erro ao verificar permissão de notificações:', error);
-      return false;
+      console.error('Erro ao registrar token:', error);
+      return null;
     }
   }, []);
 
-  const scheduleNotification = useCallback(async ({
-    title,
-    body,
-    data,
-  }: NotificationConfig) => {
+  const scheduleNotification = useCallback(async (
+    title: string,
+    body: string,
+    trigger: Notifications.NotificationTriggerInput,
+  ) => {
     try {
-      if (!permission.granted) {
-        const granted = await requestPermission();
-        if (!granted) return;
-      }
+      setState(prev => ({ ...prev, loading: true, error: null }));
 
       await Notifications.scheduleNotificationAsync({
         content: {
           title,
           body,
-          data,
-        },
-        trigger: null, // Notificação imediata
-      });
-    } catch (error) {
-      console.error('Erro ao agendar notificação:', error);
-    }
-  }, [permission.granted, requestPermission]);
-
-  const scheduleLocalNotification = useCallback(async ({
-    title,
-    body,
-    data,
-    trigger,
-  }: NotificationConfig & {
-    trigger: Notifications.NotificationTriggerInput;
-  }) => {
-    try {
-      if (!permission.granted) {
-        const granted = await requestPermission();
-        if (!granted) return;
-      }
-
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title,
-          body,
-          data,
+          sound: true,
+          priority: Notifications.AndroidNotificationPriority.HIGH,
         },
         trigger,
       });
-    } catch (error) {
-      console.error('Erro ao agendar notificação local:', error);
-    }
-  }, [permission.granted, requestPermission]);
 
-  const cancelAllNotifications = useCallback(async () => {
-    try {
-      await Notifications.cancelAllScheduledNotificationsAsync();
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: null,
+      }));
     } catch (error) {
-      console.error('Erro ao cancelar notificações:', error);
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Erro ao agendar notificação',
+      }));
     }
   }, []);
 
-  useEffect(() => {
-    checkPermission();
+  const cancelNotification = useCallback(async (identifier: string) => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
 
-    const subscription = Notifications.addNotificationReceivedListener(
-      (notification) => {
-        console.log('Notificação recebida:', notification);
+      await Notifications.cancelScheduledNotificationAsync(identifier);
+
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: null,
+      }));
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Erro ao cancelar notificação',
+      }));
+    }
+  }, []);
+
+  const cancelAllNotifications = useCallback(async () => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+
+      await Notifications.cancelAllScheduledNotificationsAsync();
+
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: null,
+      }));
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Erro ao cancelar todas as notificações',
+      }));
+    }
+  }, []);
+
+  // Busca todas as notificações do usuário
+  const getNotifications = useCallback(async () => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+
+      if (!user) {
+        throw new Error('Usuário não autenticado');
       }
-    );
 
-    return () => {
-      subscription.remove();
-    };
-  }, [checkPermission]);
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      return data as Notification[];
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Erro ao buscar notificações',
+      }));
+      throw error;
+    }
+  }, [user]);
+
+  // Busca notificações não lidas
+  const getUnreadNotifications = useCallback(async () => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('read', false)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      return data as Notification[];
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Erro ao buscar notificações não lidas',
+      }));
+      throw error;
+    }
+  }, [user]);
+
+  // Cria uma nova notificação
+  const createNotification = useCallback(async (data: CreateNotificationData) => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { data: notification, error } = await supabase
+        .from('notifications')
+        .insert([
+          {
+            user_id: user.id,
+            ...data,
+            read: false,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      // Envia a notificação push
+      if (state.token) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: data.title,
+            body: data.body,
+            data: data.data,
+          },
+          trigger: null,
+        });
+      }
+
+      return notification as Notification;
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Erro ao criar notificação',
+      }));
+      throw error;
+    }
+  }, [user, state.token]);
+
+  // Marca uma notificação como lida
+  const markNotificationAsRead = useCallback(async (id: string) => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { data: notification, error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return notification as Notification;
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Erro ao marcar notificação como lida',
+      }));
+      throw error;
+    }
+  }, [user]);
+
+  // Marca todas as notificações como lidas
+  const markAllNotificationsAsRead = useCallback(async () => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Erro ao marcar todas as notificações como lidas',
+      }));
+      throw error;
+    }
+  }, [user]);
+
+  // Remove uma notificação
+  const deleteNotification = useCallback(async (id: string) => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Erro ao remover notificação',
+      }));
+      throw error;
+    }
+  }, [user]);
 
   return {
-    permission,
-    requestPermission,
-    checkPermission,
+    ...state,
+    getNotifications,
+    getUnreadNotifications,
+    createNotification,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    deleteNotification,
     scheduleNotification,
-    scheduleLocalNotification,
+    cancelNotification,
     cancelAllNotifications,
   };
 };

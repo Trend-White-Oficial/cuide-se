@@ -1,142 +1,255 @@
-import { useState, useEffect } from 'react';
-import * as SecureStore from 'expo-secure-store';
-import { User } from '../types';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../services/supabase';
+import { useDevice } from './useDevice';
+import { useStorage } from './useStorage';
+import { useToast } from './useToast';
+import { useAnalytics } from './useAnalytics';
+import { useCrashlytics } from './useCrashlytics';
+import { useBiometrics } from './useBiometrics';
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  avatar_url?: string;
+  phone?: string;
+}
 
 interface AuthState {
   user: User | null;
-  token: string | null;
   loading: boolean;
+  error: string | null;
 }
 
-export function useAuth() {
+interface SignInCredentials {
+  email: string;
+  password: string;
+}
+
+interface SignUpCredentials extends SignInCredentials {
+  name: string;
+  phone?: string;
+}
+
+export const useAuth = () => {
   const [state, setState] = useState<AuthState>({
     user: null,
-    token: null,
     loading: true,
+    error: null,
   });
 
+  const { deviceState } = useDevice();
+  const { getItem, setItem, removeItem } = useStorage();
+  const { showToast } = useToast();
+  const { logEvent } = useAnalytics();
+  const { recordError } = useCrashlytics();
+  const { authenticate } = useBiometrics();
+
   useEffect(() => {
-    loadStoredAuth();
+    checkUser();
   }, []);
 
-  async function loadStoredAuth() {
+  const checkUser = useCallback(async () => {
     try {
-      const [storedUser, storedToken] = await Promise.all([
-        SecureStore.getItemAsync('user'),
-        SecureStore.getItemAsync('token'),
-      ]);
+      const { data: { session }, error } = await supabase.auth.getSession();
 
-      if (storedUser && storedToken) {
+      if (error) {
+        throw error;
+      }
+
+      if (session?.user) {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profileError) {
+          throw profileError;
+        }
+
         setState({
-          user: JSON.parse(storedUser),
-          token: storedToken,
+          user: {
+            id: session.user.id,
+            email: session.user.email!,
+            name: profile.name,
+            avatar_url: profile.avatar_url,
+            phone: profile.phone,
+          },
           loading: false,
+          error: null,
         });
       } else {
-        setState(prev => ({ ...prev, loading: false }));
+        setState({
+          user: null,
+          loading: false,
+          error: null,
+        });
       }
     } catch (error) {
-      console.error('Erro ao carregar dados de autenticação:', error);
-      setState(prev => ({ ...prev, loading: false }));
-    }
-  }
-
-  async function signIn(email: string, password: string) {
-    try {
-      // Implementar chamada à API de login
-      const response = await fetch('https://api.cuide-se.com/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Erro ao fazer login');
-      }
-
-      await Promise.all([
-        SecureStore.setItemAsync('user', JSON.stringify(data.user)),
-        SecureStore.setItemAsync('token', data.token),
-      ]);
-
       setState({
-        user: data.user,
-        token: data.token,
+        user: null,
         loading: false,
+        error: error instanceof Error ? error.message : 'Erro ao verificar usuário',
+      });
+    }
+  }, []);
+
+  const signIn = useCallback(async (email: string, password: string) => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      return data;
-    } catch (error) {
-      console.error('Erro no login:', error);
-      throw error;
-    }
-  }
+      if (error) {
+        throw error;
+      }
 
-  async function signOut() {
+      if (data.user) {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profileError) {
+          throw profileError;
+        }
+
+        setState({
+          user: {
+            id: data.user.id,
+            email: data.user.email!,
+            name: profile.name,
+            avatar_url: profile.avatar_url,
+            phone: profile.phone,
+          },
+          loading: false,
+          error: null,
+        });
+      }
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Erro ao fazer login',
+      }));
+    }
+  }, []);
+
+  const signUp = useCallback(async (email: string, password: string, name: string) => {
     try {
-      await Promise.all([
-        SecureStore.deleteItemAsync('user'),
-        SecureStore.deleteItemAsync('token'),
-      ]);
+      setState(prev => ({ ...prev, loading: true, error: null }));
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: data.user.id,
+              name,
+              email,
+            },
+          ]);
+
+        if (profileError) {
+          throw profileError;
+        }
+
+        setState({
+          user: {
+            id: data.user.id,
+            email: data.user.email!,
+            name,
+          },
+          loading: false,
+          error: null,
+        });
+      }
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Erro ao criar conta',
+      }));
+    }
+  }, []);
+
+  const signOut = useCallback(async () => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        throw error;
+      }
 
       setState({
         user: null,
-        token: null,
         loading: false,
+        error: null,
       });
     } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-      throw error;
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Erro ao fazer logout',
+      }));
     }
-  }
+  }, []);
 
-  async function updateUser(userData: Partial<User>) {
+  const updateProfile = useCallback(async (updates: Partial<User>) => {
     try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+
       if (!state.user) {
         throw new Error('Usuário não autenticado');
       }
 
-      // Implementar chamada à API para atualizar usuário
-      const response = await fetch(`https://api.cuide-se.com/users/${state.user.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${state.token}`,
-        },
-        body: JSON.stringify(userData),
-      });
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', state.user.id);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Erro ao atualizar usuário');
+      if (error) {
+        throw error;
       }
-
-      const updatedUser = { ...state.user, ...data.user };
-      await SecureStore.setItemAsync('user', JSON.stringify(updatedUser));
 
       setState(prev => ({
         ...prev,
-        user: updatedUser,
+        user: prev.user ? { ...prev.user, ...updates } : null,
+        loading: false,
+        error: null,
       }));
-
-      return updatedUser;
     } catch (error) {
-      console.error('Erro ao atualizar usuário:', error);
-      throw error;
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Erro ao atualizar perfil',
+      }));
     }
-  }
+  }, [state.user]);
 
   return {
     user: state.user,
-    token: state.token,
     loading: state.loading,
+    error: state.error,
     signIn,
+    signUp,
     signOut,
-    updateUser,
+    updateProfile,
   };
-} 
+}; 
