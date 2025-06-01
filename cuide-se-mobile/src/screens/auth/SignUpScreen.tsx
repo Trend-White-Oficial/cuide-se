@@ -16,46 +16,50 @@ import { Button } from '../../components/Button';
 import { Text } from '../../components/Text';
 import { Loading } from '../../components/Loading';
 import { ErrorMessage } from '../../components/ErrorMessage';
-import { validateEmail, validatePassword } from '../../utils/validation';
+import { validateEmail, validatePassword, validateName } from '../../utils/validation';
 
-export const LoginScreen: React.FC = () => {
+export const SignUpScreen: React.FC = () => {
   const navigation = useNavigation();
-  const { signIn } = useAuth();
+  const { signUp } = useAuth();
   const { theme } = useTheme();
   const { t } = useTranslation();
 
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async () => {
+  const handleSignUp = async () => {
     try {
       setError(null);
       setIsLoading(true);
 
       // Validação
+      if (!validateName(name)) {
+        throw new Error(t('auth.invalidName'));
+      }
       if (!validateEmail(email)) {
         throw new Error(t('auth.invalidEmail'));
       }
       if (!validatePassword(password)) {
         throw new Error(t('auth.invalidPassword'));
       }
+      if (password !== confirmPassword) {
+        throw new Error(t('auth.passwordsDoNotMatch'));
+      }
 
-      await signIn(email, password);
+      await signUp(email, password, name);
     } catch (error) {
-      setError(error instanceof Error ? error.message : t('auth.loginError'));
+      setError(error instanceof Error ? error.message : t('auth.signUpError'));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleForgotPassword = () => {
-    navigation.navigate('ForgotPassword');
-  };
-
-  const handleSignUp = () => {
-    navigation.navigate('SignUp');
+  const handleLogin = () => {
+    navigation.navigate('Login');
   };
 
   if (isLoading) {
@@ -72,12 +76,22 @@ export const LoginScreen: React.FC = () => {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <Text style={styles.title}>{t('auth.welcome')}</Text>
-          <Text style={styles.subtitle}>{t('auth.loginSubtitle')}</Text>
+          <Text style={styles.title}>{t('auth.createAccount')}</Text>
+          <Text style={styles.subtitle}>{t('auth.signUpSubtitle')}</Text>
         </View>
 
         <View style={styles.form}>
           {error && <ErrorMessage message={error} />}
+
+          <Input
+            label={t('auth.name')}
+            value={name}
+            onChangeText={setName}
+            placeholder={t('auth.namePlaceholder')}
+            autoCapitalize="words"
+            autoComplete="name"
+            textContentType="name"
+          />
 
           <Input
             label={t('auth.email')}
@@ -97,30 +111,32 @@ export const LoginScreen: React.FC = () => {
             placeholder={t('auth.passwordPlaceholder')}
             secureTextEntry
             autoCapitalize="none"
-            autoComplete="password"
-            textContentType="password"
+            autoComplete="password-new"
+            textContentType="newPassword"
           />
 
-          <TouchableOpacity
-            style={styles.forgotPassword}
-            onPress={handleForgotPassword}
-          >
-            <Text style={styles.forgotPasswordText}>
-              {t('auth.forgotPassword')}
-            </Text>
-          </TouchableOpacity>
+          <Input
+            label={t('auth.confirmPassword')}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            placeholder={t('auth.confirmPasswordPlaceholder')}
+            secureTextEntry
+            autoCapitalize="none"
+            autoComplete="password-new"
+            textContentType="newPassword"
+          />
 
           <Button
-            title={t('auth.login')}
-            onPress={handleLogin}
+            title={t('auth.signUp')}
+            onPress={handleSignUp}
             style={styles.button}
           />
 
-          <View style={styles.signUpContainer}>
-            <Text style={styles.signUpText}>{t('auth.noAccount')}</Text>
-            <TouchableOpacity onPress={handleSignUp}>
-              <Text style={[styles.signUpText, styles.signUpLink]}>
-                {t('auth.signUp')}
+          <View style={styles.loginContainer}>
+            <Text style={styles.loginText}>{t('auth.haveAccount')}</Text>
+            <TouchableOpacity onPress={handleLogin}>
+              <Text style={[styles.loginText, styles.loginLink]}>
+                {t('auth.login')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -154,24 +170,18 @@ const styles = StyleSheet.create({
   form: {
     gap: 16,
   },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-  },
-  forgotPasswordText: {
-    color: '#007AFF',
-  },
   button: {
     marginTop: 8,
   },
-  signUpContainer: {
+  loginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 24,
   },
-  signUpText: {
+  loginText: {
     fontSize: 16,
   },
-  signUpLink: {
+  loginLink: {
     color: '#007AFF',
     marginLeft: 4,
   },

@@ -1,387 +1,218 @@
-import { useState, useCallback } from 'react';
-import { supabase } from '../services/supabase';
-import { useAuth } from './useAuth';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '../services/api';
 import { useToast } from './useToast';
-import { useAnalytics } from './useAnalytics';
-import { useCrashlytics } from './useCrashlytics';
-import { useNotifications } from './useNotifications';
+import { useTranslation } from './useTranslation';
 
 interface Appointment {
   id: string;
-  user_id: string;
-  service_id: string;
-  provider_id: string;
+  serviceId: string;
+  professionalId: string;
+  clientId: string;
   date: string;
   time: string;
   status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled';
+  price: number;
+  duration: number;
   notes?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface AppointmentState {
-  appointments: Appointment[];
-  loading: boolean;
-  error: Error | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface CreateAppointmentData {
-  service_id: string;
-  provider_id: string;
+  serviceId: string;
+  professionalId: string;
   date: string;
   time: string;
+  notes?: string;
+}
+
+interface UpdateAppointmentData {
+  date?: string;
+  time?: string;
+  status?: Appointment['status'];
   notes?: string;
 }
 
 export const useAppointments = () => {
-  const [state, setState] = useState<AppointmentState>({
-    appointments: [],
-    loading: false,
-    error: null,
-  });
-
-  const { user } = useAuth();
+  const { t } = useTranslation();
   const { showToast } = useToast();
-  const { logEvent } = useAnalytics();
-  const { recordError } = useCrashlytics();
-  const { scheduleNotification } = useNotifications();
+  const queryClient = useQueryClient();
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
-  // Carrega os agendamentos do usuário
-  const loadAppointments = useCallback(async (): Promise<void> => {
-    if (!user) return;
-
-    try {
-      setState(prev => ({ ...prev, loading: true, error: null }));
-
-      const { data, error } = await supabase
-        .from('appointments')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('date', { ascending: true });
-
-      if (error) {
-        throw error;
-      }
-
-      setState(prev => ({
-        ...prev,
-        appointments: data as Appointment[],
-        loading: false,
-      }));
-
-      // Registra o evento
-      await logEvent('appointments_loaded', {
-        user_id: user.id,
-        count: data.length,
-      });
-    } catch (error) {
-      console.error('Erro ao carregar agendamentos:', error);
-      recordError(error instanceof Error ? error : new Error('Erro ao carregar agendamentos'));
-      setState(prev => ({
-        ...prev,
-        error: error instanceof Error ? error : new Error('Erro ao carregar agendamentos'),
-        loading: false,
-      }));
-
-      showToast({
-        type: 'error',
-        message: 'Erro ao carregar agendamentos',
-        description: 'Tente novamente mais tarde',
-      });
+  // Buscar todos os agendamentos
+  const { data: appointments, isLoading: isLoadingAppointments } = useQuery<Appointment[]>(
+    'appointments',
+    async () => {
+      const response = await api.get('/appointments');
+      return response.data;
+    },
+    {
+      onError: () => {
+        showToast(
+          t('errors.appointments.fetch'),
+          t('errors.appointments.fetchMessage'),
+          { type: 'error' }
+        );
+      },
     }
-  }, [user, logEvent, showToast, recordError]);
-
-  // Cria um novo agendamento
-  const createAppointment = useCallback(
-    async (data: CreateAppointmentData): Promise<void> => {
-      if (!user) return;
-
-      try {
-        setState(prev => ({ ...prev, loading: true, error: null }));
-
-        const { data: appointment, error } = await supabase
-          .from('appointments')
-          .insert([
-            {
-              user_id: user.id,
-              ...data,
-              status: 'scheduled',
-            },
-          ])
-          .select()
-          .single();
-
-        if (error) {
-          throw error;
-        }
-
-        setState(prev => ({
-          ...prev,
-          appointments: [...prev.appointments, appointment as Appointment],
-          loading: false,
-        }));
-
-        // Agenda notificação
-        await scheduleNotification({
-          title: 'Agendamento Confirmado',
-          body: `Seu agendamento foi confirmado para ${data.date} às ${data.time}`,
-          date: new Date(`${data.date}T${data.time}`),
-        });
-
-        // Registra o evento
-        await logEvent('appointment_created', {
-          user_id: user.id,
-          service_id: data.service_id,
-          provider_id: data.provider_id,
-          date: data.date,
-          time: data.time,
-        });
-
-        showToast({
-          type: 'success',
-          message: 'Agendamento criado',
-          description: 'Seu agendamento foi confirmado com sucesso',
-        });
-      } catch (error) {
-        console.error('Erro ao criar agendamento:', error);
-        recordError(error instanceof Error ? error : new Error('Erro ao criar agendamento'));
-        setState(prev => ({
-          ...prev,
-          error: error instanceof Error ? error : new Error('Erro ao criar agendamento'),
-          loading: false,
-        }));
-
-        showToast({
-          type: 'error',
-          message: 'Erro ao criar agendamento',
-          description: 'Tente novamente mais tarde',
-        });
-      }
-    },
-    [user, scheduleNotification, logEvent, showToast, recordError]
   );
 
-  // Atualiza um agendamento
-  const updateAppointment = useCallback(
-    async (id: string, updates: Partial<Appointment>): Promise<void> => {
-      if (!user) return;
-
-      try {
-        setState(prev => ({ ...prev, loading: true, error: null }));
-
-        const { data, error } = await supabase
-          .from('appointments')
-          .update(updates)
-          .eq('id', id)
-          .eq('user_id', user.id)
-          .select()
-          .single();
-
-        if (error) {
-          throw error;
-        }
-
-        setState(prev => ({
-          ...prev,
-          appointments: prev.appointments.map(appointment =>
-            appointment.id === id ? (data as Appointment) : appointment
-          ),
-          loading: false,
-        }));
-
-        // Registra o evento
-        await logEvent('appointment_updated', {
-          user_id: user.id,
-          appointment_id: id,
-          updates: Object.keys(updates),
-        });
-
-        showToast({
-          type: 'success',
-          message: 'Agendamento atualizado',
-          description: 'Seu agendamento foi atualizado com sucesso',
-        });
-      } catch (error) {
-        console.error('Erro ao atualizar agendamento:', error);
-        recordError(error instanceof Error ? error : new Error('Erro ao atualizar agendamento'));
-        setState(prev => ({
-          ...prev,
-          error: error instanceof Error ? error : new Error('Erro ao atualizar agendamento'),
-          loading: false,
-        }));
-
-        showToast({
-          type: 'error',
-          message: 'Erro ao atualizar agendamento',
-          description: 'Tente novamente mais tarde',
-        });
-      }
+  // Buscar agendamento por ID
+  const { data: appointment, isLoading: isLoadingAppointment } = useQuery<Appointment>(
+    ['appointment', selectedAppointment?.id],
+    async () => {
+      const response = await api.get(`/appointments/${selectedAppointment?.id}`);
+      return response.data;
     },
-    [user, logEvent, showToast, recordError]
+    {
+      enabled: !!selectedAppointment?.id,
+      onError: () => {
+        showToast(
+          t('errors.appointments.fetch'),
+          t('errors.appointments.fetchMessage'),
+          { type: 'error' }
+        );
+      },
+    }
   );
 
-  // Cancela um agendamento
-  const cancelAppointment = useCallback(
-    async (id: string): Promise<void> => {
-      if (!user) return;
-
-      try {
-        setState(prev => ({ ...prev, loading: true, error: null }));
-
-        const { error } = await supabase
-          .from('appointments')
-          .update({ status: 'cancelled' })
-          .eq('id', id)
-          .eq('user_id', user.id);
-
-        if (error) {
-          throw error;
-        }
-
-        setState(prev => ({
-          ...prev,
-          appointments: prev.appointments.map(appointment =>
-            appointment.id === id
-              ? { ...appointment, status: 'cancelled' }
-              : appointment
-          ),
-          loading: false,
-        }));
-
-        // Registra o evento
-        await logEvent('appointment_cancelled', {
-          user_id: user.id,
-          appointment_id: id,
-        });
-
-        showToast({
-          type: 'success',
-          message: 'Agendamento cancelado',
-          description: 'Seu agendamento foi cancelado com sucesso',
-        });
-      } catch (error) {
-        console.error('Erro ao cancelar agendamento:', error);
-        recordError(error instanceof Error ? error : new Error('Erro ao cancelar agendamento'));
-        setState(prev => ({
-          ...prev,
-          error: error instanceof Error ? error : new Error('Erro ao cancelar agendamento'),
-          loading: false,
-        }));
-
-        showToast({
-          type: 'error',
-          message: 'Erro ao cancelar agendamento',
-          description: 'Tente novamente mais tarde',
-        });
-      }
+  // Criar agendamento
+  const createAppointment = useMutation(
+    async (data: CreateAppointmentData) => {
+      const response = await api.post('/appointments', data);
+      return response.data;
     },
-    [user, logEvent, showToast, recordError]
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('appointments');
+        showToast(
+          t('success.appointments.create'),
+          t('success.appointments.createMessage'),
+          { type: 'success' }
+        );
+      },
+      onError: () => {
+        showToast(
+          t('errors.appointments.create'),
+          t('errors.appointments.createMessage'),
+          { type: 'error' }
+        );
+      },
+    }
   );
 
-  // Completa um agendamento
-  const completeAppointment = useCallback(
-    async (id: string): Promise<void> => {
-      if (!user) return;
-
-      try {
-        setState(prev => ({ ...prev, loading: true, error: null }));
-
-        const { error } = await supabase
-          .from('appointments')
-          .update({ status: 'completed' })
-          .eq('id', id)
-          .eq('user_id', user.id);
-
-        if (error) {
-          throw error;
-        }
-
-        setState(prev => ({
-          ...prev,
-          appointments: prev.appointments.map(appointment =>
-            appointment.id === id
-              ? { ...appointment, status: 'completed' }
-              : appointment
-          ),
-          loading: false,
-        }));
-
-        // Registra o evento
-        await logEvent('appointment_completed', {
-          user_id: user.id,
-          appointment_id: id,
-        });
-
-        showToast({
-          type: 'success',
-          message: 'Agendamento concluído',
-          description: 'Seu agendamento foi marcado como concluído',
-        });
-      } catch (error) {
-        console.error('Erro ao completar agendamento:', error);
-        recordError(error instanceof Error ? error : new Error('Erro ao completar agendamento'));
-        setState(prev => ({
-          ...prev,
-          error: error instanceof Error ? error : new Error('Erro ao completar agendamento'),
-          loading: false,
-        }));
-
-        showToast({
-          type: 'error',
-          message: 'Erro ao completar agendamento',
-          description: 'Tente novamente mais tarde',
-        });
-      }
+  // Atualizar agendamento
+  const updateAppointment = useMutation(
+    async ({ id, data }: { id: string; data: UpdateAppointmentData }) => {
+      const response = await api.put(`/appointments/${id}`, data);
+      return response.data;
     },
-    [user, logEvent, showToast, recordError]
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('appointments');
+        showToast(
+          t('success.appointments.update'),
+          t('success.appointments.updateMessage'),
+          { type: 'success' }
+        );
+      },
+      onError: () => {
+        showToast(
+          t('errors.appointments.update'),
+          t('errors.appointments.updateMessage'),
+          { type: 'error' }
+        );
+      },
+    }
   );
 
-  // Filtra agendamentos por status
-  const filterAppointmentsByStatus = useCallback(
-    (status: Appointment['status']): Appointment[] => {
-      return state.appointments.filter(appointment => appointment.status === status);
+  // Cancelar agendamento
+  const cancelAppointment = useMutation(
+    async (id: string) => {
+      const response = await api.put(`/appointments/${id}/cancel`);
+      return response.data;
     },
-    [state.appointments]
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('appointments');
+        showToast(
+          t('success.appointments.cancel'),
+          t('success.appointments.cancelMessage'),
+          { type: 'success' }
+        );
+      },
+      onError: () => {
+        showToast(
+          t('errors.appointments.cancel'),
+          t('errors.appointments.cancelMessage'),
+          { type: 'error' }
+        );
+      },
+    }
   );
 
-  // Filtra agendamentos por data
-  const filterAppointmentsByDate = useCallback(
-    (date: string): Appointment[] => {
-      return state.appointments.filter(appointment => appointment.date === date);
+  // Confirmar agendamento
+  const confirmAppointment = useMutation(
+    async (id: string) => {
+      const response = await api.put(`/appointments/${id}/confirm`);
+      return response.data;
     },
-    [state.appointments]
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('appointments');
+        showToast(
+          t('success.appointments.confirm'),
+          t('success.appointments.confirmMessage'),
+          { type: 'success' }
+        );
+      },
+      onError: () => {
+        showToast(
+          t('errors.appointments.confirm'),
+          t('errors.appointments.confirmMessage'),
+          { type: 'error' }
+        );
+      },
+    }
   );
 
-  // Filtra agendamentos por provedor
-  const filterAppointmentsByProvider = useCallback(
-    (providerId: string): Appointment[] => {
-      return state.appointments.filter(
-        appointment => appointment.provider_id === providerId
-      );
+  // Completar agendamento
+  const completeAppointment = useMutation(
+    async (id: string) => {
+      const response = await api.put(`/appointments/${id}/complete`);
+      return response.data;
     },
-    [state.appointments]
-  );
-
-  // Filtra agendamentos por serviço
-  const filterAppointmentsByService = useCallback(
-    (serviceId: string): Appointment[] => {
-      return state.appointments.filter(
-        appointment => appointment.service_id === serviceId
-      );
-    },
-    [state.appointments]
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('appointments');
+        showToast(
+          t('success.appointments.complete'),
+          t('success.appointments.completeMessage'),
+          { type: 'success' }
+        );
+      },
+      onError: () => {
+        showToast(
+          t('errors.appointments.complete'),
+          t('errors.appointments.completeMessage'),
+          { type: 'error' }
+        );
+      },
+    }
   );
 
   return {
-    ...state,
-    loadAppointments,
+    appointments,
+    appointment,
+    selectedAppointment,
+    setSelectedAppointment,
+    isLoadingAppointments,
+    isLoadingAppointment,
     createAppointment,
     updateAppointment,
     cancelAppointment,
+    confirmAppointment,
     completeAppointment,
-    filterAppointmentsByStatus,
-    filterAppointmentsByDate,
-    filterAppointmentsByProvider,
-    filterAppointmentsByService,
   };
 }; 

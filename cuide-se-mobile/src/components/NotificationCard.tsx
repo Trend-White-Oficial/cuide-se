@@ -1,143 +1,127 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Card } from './Card';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
+import { useTheme } from '../hooks/useTheme';
+import { useTranslation } from '../hooks/useTranslation';
+import { Text } from './Text';
 import { Icon } from './Icon';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Notification } from '../services/notifications';
 
 interface NotificationCardProps {
-  id: string;
-  title: string;
-  message: string;
-  type: 'appointment' | 'payment' | 'system' | 'promotion';
-  date: Date;
-  read: boolean;
-  onPress?: () => void;
+  notification: Notification;
+  onPress: () => void;
 }
 
 export const NotificationCard: React.FC<NotificationCardProps> = ({
-  id,
-  title,
-  message,
-  type,
-  date,
-  read,
+  notification,
   onPress,
 }) => {
-  const formatDate = (date: Date) => {
+  const { theme } = useTheme();
+  const { t } = useTranslation();
+
+  const getIconName = () => {
+    if (notification.data?.type === 'appointment') return 'calendar';
+    if (notification.data?.type === 'payment') return 'credit-card';
+    if (notification.data?.type === 'review') return 'star';
+    return 'bell';
+  };
+
+  const formatDate = (date: string) => {
     const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    const notificationDate = new Date(date);
+    const diffInMinutes = Math.floor((now.getTime() - notificationDate.getTime()) / (1000 * 60));
 
     if (diffInMinutes < 60) {
-      return `${diffInMinutes} min atrás`;
+      return t('notifications.minutesAgo', { minutes: diffInMinutes });
     }
 
-    if (diffInMinutes < 24 * 60) {
-      const hours = Math.floor(diffInMinutes / 60);
-      return `${hours}h atrás`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+      return t('notifications.hoursAgo', { hours: diffInHours });
     }
 
-    return format(date, "d 'de' MMMM 'de' yyyy", { locale: ptBR });
-  };
-
-  const getTypeIcon = (type: NotificationCardProps['type']) => {
-    switch (type) {
-      case 'appointment':
-        return 'calendar';
-      case 'payment':
-        return 'credit-card';
-      case 'promotion':
-        return 'gift';
-      default:
-        return 'bell';
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) {
+      return t('notifications.daysAgo', { days: diffInDays });
     }
-  };
 
-  const getTypeColor = (type: NotificationCardProps['type']) => {
-    switch (type) {
-      case 'appointment':
-        return '#007AFF';
-      case 'payment':
-        return '#34C759';
-      case 'promotion':
-        return '#FF9500';
-      default:
-        return '#666';
-    }
+    return notificationDate.toLocaleDateString();
   };
 
   return (
-    <Card
-      onPress={onPress}
+    <TouchableOpacity
       style={[
         styles.container,
-        !read && styles.unreadContainer,
+        { backgroundColor: theme.colors.card },
+        !notification.read && styles.unread,
       ]}
+      onPress={onPress}
     >
-      <View style={styles.header}>
-        <View style={styles.typeContainer}>
-          <Icon
-            name={getTypeIcon(type)}
-            size={20}
-            color={getTypeColor(type)}
-          />
-          {!read && <View style={styles.unreadDot} />}
-        </View>
-        <Text style={styles.date}>{formatDate(date)}</Text>
+      <View style={styles.iconContainer}>
+        <Icon
+          name={getIconName()}
+          size={24}
+          color={theme.colors.primary}
+        />
       </View>
 
-      <Text style={[styles.title, !read && styles.unreadText]}>
-        {title}
-      </Text>
+      <View style={styles.content}>
+        <Text style={styles.title}>{notification.title}</Text>
+        <Text style={styles.body}>{notification.body}</Text>
+        <Text style={styles.date}>{formatDate(notification.createdAt)}</Text>
+      </View>
 
-      <Text style={styles.message} numberOfLines={2}>
-        {message}
-      </Text>
-    </Card>
+      {!notification.read && (
+        <View style={[styles.unreadDot, { backgroundColor: theme.colors.primary }]} />
+      )}
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 12,
-    padding: 16,
-  },
-  unreadContainer: {
-    backgroundColor: '#F8F9FA',
-  },
-  header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
     marginBottom: 8,
   },
-  typeContainer: {
-    flexDirection: 'row',
+  unread: {
+    opacity: 1,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
+  },
+  content: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  body: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  date: {
+    fontSize: 12,
+    color: '#999',
   },
   unreadDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#007AFF',
     marginLeft: 8,
-  },
-  date: {
-    fontSize: 12,
-    color: '#666',
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 4,
-  },
-  unreadText: {
-    fontWeight: '600',
-  },
-  message: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
+    alignSelf: 'center',
   },
 }); 

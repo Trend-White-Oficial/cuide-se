@@ -1,123 +1,85 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
+import { useTheme } from '../hooks/useTheme';
+import { useTranslation } from '../hooks/useTranslation';
 import { Text } from './Text';
-import { Card } from './Card';
-import { Avatar } from './Avatar';
-import { theme } from '../theme';
-import { MaterialIcons } from '@expo/vector-icons';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Icon } from './Icon';
+import { Review } from '../services/reviews';
 
 interface ReviewCardProps {
-  id: string;
-  userName: string;
-  userAvatar?: string;
-  rating: number;
-  comment: string;
-  date: string;
-  onPress?: () => void;
-  onEdit?: () => void;
-  onDelete?: () => void;
-  isEditable?: boolean;
+  review: Review;
+  onPress: () => void;
 }
 
 export const ReviewCard: React.FC<ReviewCardProps> = ({
-  id,
-  userName,
-  userAvatar,
-  rating,
-  comment,
-  date,
+  review,
   onPress,
-  onEdit,
-  onDelete,
-  isEditable = false,
 }) => {
-  // Formata a data para o padrão brasileiro
-  const formattedDate = format(new Date(date), "dd 'de' MMMM 'de' yyyy", {
-    locale: ptBR,
-  });
+  const { theme } = useTheme();
+  const { t } = useTranslation();
 
-  // Renderiza as estrelas baseado na avaliação
-  const renderStars = () => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <MaterialIcons
-          key={i}
-          name={i <= rating ? 'star' : 'star-border'}
-          size={16}
-          color={i <= rating ? theme.colors.warning : theme.colors.textSecondary}
-          style={styles.star}
-        />
-      );
+  const formatDate = (date: string) => {
+    const now = new Date();
+    const reviewDate = new Date(date);
+    const diffInMinutes = Math.floor((now.getTime() - reviewDate.getTime()) / (1000 * 60));
+
+    if (diffInMinutes < 60) {
+      return t('reviews.minutesAgo', { minutes: diffInMinutes });
     }
-    return stars;
+
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+      return t('reviews.hoursAgo', { hours: diffInHours });
+    }
+
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) {
+      return t('reviews.daysAgo', { days: diffInDays });
+    }
+
+    return reviewDate.toLocaleDateString();
+  };
+
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }).map((_, index) => (
+      <Icon
+        key={index}
+        name={index < rating ? 'star' : 'star-outline'}
+        size={16}
+        color={index < rating ? theme.colors.warning : theme.colors.text}
+      />
+    ));
   };
 
   return (
-    <Card style={styles.container}>
-      <TouchableOpacity onPress={onPress} style={styles.content}>
-        <View style={styles.header}>
-          <View style={styles.userInfo}>
-            <Avatar
-              size={40}
-              source={userAvatar ? { uri: userAvatar } : undefined}
-              style={styles.avatar}
-            />
-            <View style={styles.userDetails}>
-              <Text style={styles.userName}>{userName}</Text>
-              <Text style={styles.date}>{formattedDate}</Text>
-            </View>
-          </View>
-
-          {isEditable && (
-            <View style={styles.actions}>
-              {onEdit && (
-                <TouchableOpacity
-                  onPress={onEdit}
-                  style={styles.actionButton}
-                >
-                  <MaterialIcons
-                    name="edit"
-                    size={20}
-                    color={theme.colors.primary}
-                  />
-                </TouchableOpacity>
-              )}
-              {onDelete && (
-                <TouchableOpacity
-                  onPress={onDelete}
-                  style={styles.actionButton}
-                >
-                  <MaterialIcons
-                    name="delete"
-                    size={20}
-                    color={theme.colors.error}
-                  />
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-        </View>
-
+    <TouchableOpacity
+      style={[
+        styles.container,
+        { backgroundColor: theme.colors.card },
+      ]}
+      onPress={onPress}
+    >
+      <View style={styles.header}>
         <View style={styles.ratingContainer}>
-          {renderStars()}
+          {renderStars(review.rating)}
         </View>
+        <Text style={styles.date}>{formatDate(review.createdAt)}</Text>
+      </View>
 
-        <Text style={styles.comment}>{comment}</Text>
-      </TouchableOpacity>
-    </Card>
+      <Text style={styles.comment}>{review.comment}</Text>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 8,
-    marginHorizontal: 16,
-  },
-  content: {
     padding: 16,
+    borderRadius: 12,
+    marginBottom: 8,
   },
   header: {
     flexDirection: 'row',
@@ -125,43 +87,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  userInfo: {
+  ratingContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatar: {
-    marginRight: 12,
-  },
-  userDetails: {
-    flex: 1,
-  },
-  userName: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: theme.colors.text,
-    marginBottom: 2,
+    gap: 4,
   },
   date: {
     fontSize: 12,
-    color: theme.colors.textSecondary,
-  },
-  actions: {
-    flexDirection: 'row',
-  },
-  actionButton: {
-    padding: 4,
-    marginLeft: 8,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    marginBottom: 12,
-  },
-  star: {
-    marginRight: 4,
+    color: '#999',
   },
   comment: {
     fontSize: 14,
-    color: theme.colors.text,
     lineHeight: 20,
   },
 }); 

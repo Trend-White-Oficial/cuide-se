@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@env';
 import { API_CONFIG } from '../config';
+import { supabase, getSupabaseError, handleSupabaseError } from '../config/supabase';
+import type { User, Profile, Service, Appointment, Review, Payment } from '../config/supabase';
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
@@ -195,5 +197,224 @@ export const api = {
       if (error) throw error;
       return data;
     },
+  },
+};
+
+// Serviços de Autenticação
+export const authService = {
+  async signIn(email: string, password: string) {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      handleSupabaseError(error);
+      throw new Error(getSupabaseError(error));
+    }
+  },
+
+  async signUp(email: string, password: string, name: string) {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name },
+        },
+      });
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      handleSupabaseError(error);
+      throw new Error(getSupabaseError(error));
+    }
+  },
+
+  async signOut() {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error) {
+      handleSupabaseError(error);
+      throw new Error(getSupabaseError(error));
+    }
+  },
+
+  async resetPassword(email: string) {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) throw error;
+    } catch (error) {
+      handleSupabaseError(error);
+      throw new Error(getSupabaseError(error));
+    }
+  },
+};
+
+// Serviços de Perfil
+export const profileService = {
+  async getProfile(userId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      if (error) throw error;
+      return data as Profile;
+    } catch (error) {
+      handleSupabaseError(error);
+      throw new Error(getSupabaseError(error));
+    }
+  },
+
+  async updateProfile(userId: string, updates: Partial<Profile>) {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('user_id', userId)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Profile;
+    } catch (error) {
+      handleSupabaseError(error);
+      throw new Error(getSupabaseError(error));
+    }
+  },
+};
+
+// Serviços de Agendamento
+export const appointmentService = {
+  async getAppointments(userId: string, role: 'client' | 'professional') {
+    try {
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq(`${role}_id`, userId)
+        .order('date', { ascending: true });
+      if (error) throw error;
+      return data as Appointment[];
+    } catch (error) {
+      handleSupabaseError(error);
+      throw new Error(getSupabaseError(error));
+    }
+  },
+
+  async createAppointment(appointment: Omit<Appointment, 'id' | 'created_at' | 'updated_at'>) {
+    try {
+      const { data, error } = await supabase
+        .from('appointments')
+        .insert(appointment)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Appointment;
+    } catch (error) {
+      handleSupabaseError(error);
+      throw new Error(getSupabaseError(error));
+    }
+  },
+
+  async updateAppointment(id: string, updates: Partial<Appointment>) {
+    try {
+      const { data, error } = await supabase
+        .from('appointments')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Appointment;
+    } catch (error) {
+      handleSupabaseError(error);
+      throw new Error(getSupabaseError(error));
+    }
+  },
+};
+
+// Serviços de Avaliação
+export const reviewService = {
+  async getReviews(professionalId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('professional_id', professionalId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as Review[];
+    } catch (error) {
+      handleSupabaseError(error);
+      throw new Error(getSupabaseError(error));
+    }
+  },
+
+  async createReview(review: Omit<Review, 'id' | 'created_at' | 'updated_at'>) {
+    try {
+      const { data, error } = await supabase
+        .from('reviews')
+        .insert(review)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Review;
+    } catch (error) {
+      handleSupabaseError(error);
+      throw new Error(getSupabaseError(error));
+    }
+  },
+};
+
+// Serviços de Pagamento
+export const paymentService = {
+  async getPayments(appointmentId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('appointment_id', appointmentId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as Payment[];
+    } catch (error) {
+      handleSupabaseError(error);
+      throw new Error(getSupabaseError(error));
+    }
+  },
+
+  async createPayment(payment: Omit<Payment, 'id' | 'created_at' | 'updated_at'>) {
+    try {
+      const { data, error } = await supabase
+        .from('payments')
+        .insert(payment)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Payment;
+    } catch (error) {
+      handleSupabaseError(error);
+      throw new Error(getSupabaseError(error));
+    }
+  },
+
+  async updatePaymentStatus(id: string, status: Payment['status']) {
+    try {
+      const { data, error } = await supabase
+        .from('payments')
+        .update({ status })
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Payment;
+    } catch (error) {
+      handleSupabaseError(error);
+      throw new Error(getSupabaseError(error));
+    }
   },
 }; 

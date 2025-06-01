@@ -1,125 +1,123 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Card } from './Card';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
+import { useTheme } from '../hooks/useTheme';
+import { useTranslation } from '../hooks/useTranslation';
+import { Text } from './Text';
 import { Icon } from './Icon';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Payment } from '../services/payments';
 
 interface PaymentCardProps {
-  id: string;
-  amount: number;
-  status: 'pending' | 'completed' | 'failed' | 'refunded';
-  paymentMethod: string;
-  date: Date;
-  serviceName: string;
-  onPress?: () => void;
+  payment: Payment;
+  onPress: () => void;
 }
 
 export const PaymentCard: React.FC<PaymentCardProps> = ({
-  id,
-  amount,
-  status,
-  paymentMethod,
-  date,
-  serviceName,
+  payment,
   onPress,
 }) => {
-  const formatDate = (date: Date) => {
-    return format(date, "d 'de' MMMM 'de' yyyy", { locale: ptBR });
-  };
+  const { theme } = useTheme();
+  const { t } = useTranslation();
 
-  const formatAmount = (value: number) => {
-    return `R$ ${value.toFixed(2)}`;
-  };
-
-  const getStatusColor = (status: PaymentCardProps['status']) => {
+  const getStatusColor = (status: Payment['status']) => {
     switch (status) {
       case 'completed':
-        return '#34C759';
+        return theme.colors.success;
       case 'pending':
-        return '#FF9500';
+        return theme.colors.warning;
       case 'failed':
-        return '#FF3B30';
+        return theme.colors.error;
       case 'refunded':
-        return '#007AFF';
+        return theme.colors.info;
       default:
-        return '#666';
+        return theme.colors.text;
     }
   };
 
-  const getStatusText = (status: PaymentCardProps['status']) => {
-    switch (status) {
-      case 'completed':
-        return 'Concluído';
-      case 'pending':
-        return 'Pendente';
-      case 'failed':
-        return 'Falhou';
-      case 'refunded':
-        return 'Reembolsado';
-      default:
-        return status;
-    }
-  };
-
-  const getPaymentMethodIcon = (method: string) => {
-    switch (method.toLowerCase()) {
+  const getPaymentMethodIcon = (method: Payment['paymentMethod']) => {
+    switch (method) {
       case 'credit_card':
         return 'credit-card';
       case 'debit_card':
         return 'credit-card';
       case 'pix':
         return 'qrcode';
+      case 'bank_transfer':
+        return 'bank';
       default:
         return 'money';
     }
   };
 
+  const formatDate = (date: string) => {
+    const now = new Date();
+    const paymentDate = new Date(date);
+    const diffInMinutes = Math.floor((now.getTime() - paymentDate.getTime()) / (1000 * 60));
+
+    if (diffInMinutes < 60) {
+      return t('payments.minutesAgo', { minutes: diffInMinutes });
+    }
+
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+      return t('payments.hoursAgo', { hours: diffInHours });
+    }
+
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) {
+      return t('payments.daysAgo', { days: diffInDays });
+    }
+
+    return paymentDate.toLocaleDateString();
+  };
+
+  const formatAmount = (amount: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(amount);
+  };
+
   return (
-    <Card onPress={onPress} style={styles.container}>
+    <TouchableOpacity
+      style={[
+        styles.container,
+        { backgroundColor: theme.colors.card },
+      ]}
+      onPress={onPress}
+    >
       <View style={styles.header}>
-        <View style={styles.serviceInfo}>
-          <Icon name="scissors" size={16} color="#666" />
-          <Text style={styles.serviceName}>{serviceName}</Text>
-        </View>
-        <View
-          style={[
-            styles.statusContainer,
-            { backgroundColor: `${getStatusColor(status)}15` },
-          ]}
-        >
-          <Text
-            style={[styles.statusText, { color: getStatusColor(status) }]}
-          >
-            {getStatusText(status)}
+        <View style={styles.methodContainer}>
+          <Icon
+            name={getPaymentMethodIcon(payment.paymentMethod)}
+            size={24}
+            color={theme.colors.primary}
+          />
+          <Text style={styles.method}>
+            {t(`payments.methods.${payment.paymentMethod}`)}
           </Text>
         </View>
+        <Text style={[styles.status, { color: getStatusColor(payment.status) }]}>
+          {t(`payments.status.${payment.status}`)}
+        </Text>
       </View>
 
-      <View style={styles.amountContainer}>
-        <Text style={styles.amount}>{formatAmount(amount)}</Text>
-        <View style={styles.paymentMethodContainer}>
-          <Icon
-            name={getPaymentMethodIcon(paymentMethod)}
-            size={16}
-            color="#666"
-          />
-          <Text style={styles.paymentMethod}>{paymentMethod}</Text>
-        </View>
+      <View style={styles.content}>
+        <Text style={styles.amount}>{formatAmount(payment.amount)}</Text>
+        <Text style={styles.date}>{formatDate(payment.createdAt)}</Text>
       </View>
-
-      <View style={styles.footer}>
-        <Text style={styles.date}>{formatDate(date)}</Text>
-        <Text style={styles.id}>#{id}</Text>
-      </View>
-    </Card>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
     padding: 16,
+    borderRadius: 12,
+    marginBottom: 8,
   },
   header: {
     flexDirection: 'row',
@@ -127,58 +125,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  serviceInfo: {
+  methodContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
-  serviceName: {
+  method: {
     fontSize: 14,
     color: '#666',
-    marginLeft: 8,
   },
-  statusContainer: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
+  status: {
+    fontSize: 14,
+    fontWeight: '600',
   },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  amountContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+  content: {
+    gap: 4,
   },
   amount: {
     fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-  },
-  paymentMethodContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  paymentMethod: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 4,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    fontWeight: 'bold',
   },
   date: {
-    fontSize: 12,
-    color: '#666',
-  },
-  id: {
     fontSize: 12,
     color: '#999',
   },

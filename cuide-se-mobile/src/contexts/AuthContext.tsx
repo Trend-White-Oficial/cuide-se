@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../services/supabase';
+import { supabase } from '../config/supabase';
+import { authService } from '../services/supabase';
 import { User } from '@supabase/supabase-js';
-import { SECURITY_CONFIG } from '../config';
+import { useToast } from '../hooks/useToast';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface AuthContextData {
   user: User | null;
@@ -21,53 +23,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { showToast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Verificar sessão atual
+    const checkUser = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+      } catch (error) {
+        console.error('Erro ao verificar sessão:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     checkUser();
 
     // Escutar mudanças na autenticação
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-      } else {
-        setUser(null);
-      }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
       setIsLoading(false);
     });
 
     return () => {
-      authListener?.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
-  const checkUser = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-      }
-    } catch (error) {
-      console.error('Erro ao verificar usuário:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const signIn = async (email: string, password: string) => {
     try {
-      setError(null);
       setIsLoading(true);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-      if (data.user) setUser(data.user);
-    } catch (error: any) {
-      setError(error.message);
+      setError(null);
+      await authService.signIn(email, password);
+      showToast(t('auth.signInSuccess'), 'success');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : t('auth.signInError'));
+      showToast(t('auth.signInError'), 'error');
       throw error;
     } finally {
       setIsLoading(false);
@@ -76,23 +69,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, name: string) => {
     try {
-      setError(null);
       setIsLoading(true);
-
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-          },
-        },
-      });
-
-      if (error) throw error;
-      if (data.user) setUser(data.user);
-    } catch (error: any) {
-      setError(error.message);
+      setError(null);
+      await authService.signUp(email, password, name);
+      showToast(t('auth.signUpSuccess'), 'success');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : t('auth.signUpError'));
+      showToast(t('auth.signUpError'), 'error');
       throw error;
     } finally {
       setIsLoading(false);
@@ -101,15 +84,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      setError(null);
       setIsLoading(true);
-
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      setUser(null);
-    } catch (error: any) {
-      setError(error.message);
+      setError(null);
+      await authService.signOut();
+      showToast(t('auth.signOutSuccess'), 'success');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : t('auth.signOutError'));
+      showToast(t('auth.signOutError'), 'error');
       throw error;
     } finally {
       setIsLoading(false);
@@ -118,16 +99,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const forgotPassword = async (email: string) => {
     try {
-      setError(null);
       setIsLoading(true);
-
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'cuide-se://reset-password',
-      });
-
-      if (error) throw error;
-    } catch (error: any) {
-      setError(error.message);
+      setError(null);
+      await authService.resetPassword(email);
+      showToast(t('auth.resetPasswordSuccess'), 'success');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : t('auth.resetPasswordError'));
+      showToast(t('auth.resetPasswordError'), 'error');
       throw error;
     } finally {
       setIsLoading(false);
@@ -136,16 +114,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (password: string) => {
     try {
-      setError(null);
       setIsLoading(true);
-
-      const { error } = await supabase.auth.updateUser({
-        password,
-      });
-
+      setError(null);
+      const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-    } catch (error: any) {
-      setError(error.message);
+      showToast(t('auth.passwordUpdateSuccess'), 'success');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : t('auth.passwordUpdateError'));
+      showToast(t('auth.passwordUpdateError'), 'error');
       throw error;
     } finally {
       setIsLoading(false);

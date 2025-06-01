@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { supabase } from '../services/supabase';
+import { useState, useCallback, useEffect } from 'react';
+import { paymentService, Payment, CreatePaymentData } from '../services/payments';
 import { useAuth } from './useAuth';
 import { useToast } from './useToast';
 import { useAnalytics } from './useAnalytics';
@@ -32,254 +32,163 @@ interface PaymentState {
   error: Error | null;
 }
 
-interface CreatePaymentData {
-  appointment_id: string;
-  amount: number;
-  payment_method: Payment['payment_method'];
-  payment_details: Payment['payment_details'];
-}
-
 export const usePayments = () => {
-  const [state, setState] = useState<PaymentState>({
-    payments: [],
-    loading: false,
-    error: null,
-  });
-
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
   const { showToast } = useToast();
   const { logEvent } = useAnalytics();
   const { recordError } = useCrashlytics();
 
-  // Carrega os pagamentos do usuário
-  const loadPayments = useCallback(async (): Promise<void> => {
-    if (!user) return;
-
+  const fetchPayments = useCallback(async () => {
     try {
-      setState(prev => ({ ...prev, loading: true, error: null }));
-
-      const { data, error } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        throw error;
-      }
-
-      setState(prev => ({
-        ...prev,
-        payments: data as Payment[],
-        loading: false,
-      }));
-
-      // Registra o evento
+      setIsLoading(true);
+      setError(null);
+      const data = await paymentService.getPayments();
+      setPayments(data);
       await logEvent('payments_loaded', {
-        user_id: user.id,
+        user_id: user?.id,
         count: data.length,
       });
-    } catch (error) {
-      console.error('Erro ao carregar pagamentos:', error);
-      recordError(error instanceof Error ? error : new Error('Erro ao carregar pagamentos'));
-      setState(prev => ({
-        ...prev,
-        error: error instanceof Error ? error : new Error('Erro ao carregar pagamentos'),
-        loading: false,
-      }));
-
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Erro ao carregar pagamentos'));
+      recordError(err instanceof Error ? err : new Error('Erro ao carregar pagamentos'));
       showToast({
         type: 'error',
         message: 'Erro ao carregar pagamentos',
         description: 'Tente novamente mais tarde',
       });
+    } finally {
+      setIsLoading(false);
     }
   }, [user, logEvent, showToast, recordError]);
 
-  // Cria um novo pagamento
-  const createPayment = useCallback(
-    async (data: CreatePaymentData): Promise<void> => {
-      if (!user) return;
+  const createPayment = useCallback(async (data: CreatePaymentData) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const payment = await paymentService.createPayment(data);
+      setPayments(prev => [payment, ...prev]);
+      await logEvent('payment_created', {
+        user_id: user?.id,
+        appointment_id: data.appointment_id,
+        amount: data.amount,
+        payment_method: data.payment_method,
+      });
+      showToast({
+        type: 'success',
+        message: 'Pagamento iniciado',
+        description: 'Seu pagamento está sendo processado',
+      });
+      return payment;
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Erro ao criar pagamento'));
+      recordError(err instanceof Error ? err : new Error('Erro ao criar pagamento'));
+      showToast({
+        type: 'error',
+        message: 'Erro ao criar pagamento',
+        description: 'Tente novamente mais tarde',
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, logEvent, showToast, recordError]);
 
-      try {
-        setState(prev => ({ ...prev, loading: true, error: null }));
+  const getPaymentById = useCallback(async (id: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const payment = await paymentService.getPaymentById(id);
+      return payment;
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Erro ao obter pagamento'));
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-        const { data: payment, error } = await supabase
-          .from('payments')
-          .insert([
-            {
-              user_id: user.id,
-              ...data,
-              status: 'pending',
-            },
-          ])
-          .select()
-          .single();
+  const updatePaymentStatus = useCallback(async (id: string, status: Payment['status']) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const payment = await paymentService.updatePaymentStatus(id, status);
+      setPayments(prev =>
+        prev.map(p => (p.id === id ? payment : p))
+      );
+      await logEvent('payment_status_updated', {
+        user_id: user?.id,
+        payment_id: id,
+        status,
+      });
+      showToast({
+        type: 'success',
+        message: 'Status do pagamento atualizado',
+        description: `O pagamento foi ${status}`,
+      });
+      return payment;
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Erro ao atualizar status do pagamento'));
+      recordError(err instanceof Error ? err : new Error('Erro ao atualizar status do pagamento'));
+      showToast({
+        type: 'error',
+        message: 'Erro ao atualizar status do pagamento',
+        description: 'Tente novamente mais tarde',
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, logEvent, showToast, recordError]);
 
-        if (error) {
-          throw error;
-        }
+  const refundPayment = useCallback(async (id: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const payment = await paymentService.refundPayment(id);
+      setPayments(prev =>
+        prev.map(p => (p.id === id ? payment : p))
+      );
+      await logEvent('payment_refunded', {
+        user_id: user?.id,
+        payment_id: id,
+      });
+      showToast({
+        type: 'success',
+        message: 'Reembolso solicitado',
+        description: 'Seu reembolso está sendo processado',
+      });
+      return payment;
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Erro ao reembolsar pagamento'));
+      recordError(err instanceof Error ? err : new Error('Erro ao reembolsar pagamento'));
+      showToast({
+        type: 'error',
+        message: 'Erro ao reembolsar pagamento',
+        description: 'Tente novamente mais tarde',
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, logEvent, showToast, recordError]);
 
-        setState(prev => ({
-          ...prev,
-          payments: [payment as Payment, ...prev.payments],
-          loading: false,
-        }));
-
-        // Registra o evento
-        await logEvent('payment_created', {
-          user_id: user.id,
-          appointment_id: data.appointment_id,
-          amount: data.amount,
-          payment_method: data.payment_method,
-        });
-
-        showToast({
-          type: 'success',
-          message: 'Pagamento iniciado',
-          description: 'Seu pagamento está sendo processado',
-        });
-      } catch (error) {
-        console.error('Erro ao criar pagamento:', error);
-        recordError(error instanceof Error ? error : new Error('Erro ao criar pagamento'));
-        setState(prev => ({
-          ...prev,
-          error: error instanceof Error ? error : new Error('Erro ao criar pagamento'),
-          loading: false,
-        }));
-
-        showToast({
-          type: 'error',
-          message: 'Erro ao criar pagamento',
-          description: 'Tente novamente mais tarde',
-        });
-      }
-    },
-    [user, logEvent, showToast, recordError]
-  );
-
-  // Atualiza o status de um pagamento
-  const updatePaymentStatus = useCallback(
-    async (id: string, status: Payment['status']): Promise<void> => {
-      if (!user) return;
-
-      try {
-        setState(prev => ({ ...prev, loading: true, error: null }));
-
-        const { data, error } = await supabase
-          .from('payments')
-          .update({ status })
-          .eq('id', id)
-          .eq('user_id', user.id)
-          .select()
-          .single();
-
-        if (error) {
-          throw error;
-        }
-
-        setState(prev => ({
-          ...prev,
-          payments: prev.payments.map(payment =>
-            payment.id === id ? (data as Payment) : payment
-          ),
-          loading: false,
-        }));
-
-        // Registra o evento
-        await logEvent('payment_status_updated', {
-          user_id: user.id,
-          payment_id: id,
-          status,
-        });
-
-        showToast({
-          type: 'success',
-          message: 'Status do pagamento atualizado',
-          description: `O pagamento foi ${status}`,
-        });
-      } catch (error) {
-        console.error('Erro ao atualizar status do pagamento:', error);
-        recordError(error instanceof Error ? error : new Error('Erro ao atualizar status do pagamento'));
-        setState(prev => ({
-          ...prev,
-          error: error instanceof Error ? error : new Error('Erro ao atualizar status do pagamento'),
-          loading: false,
-        }));
-
-        showToast({
-          type: 'error',
-          message: 'Erro ao atualizar status do pagamento',
-          description: 'Tente novamente mais tarde',
-        });
-      }
-    },
-    [user, logEvent, showToast, recordError]
-  );
-
-  // Solicita reembolso de um pagamento
-  const requestRefund = useCallback(
-    async (id: string): Promise<void> => {
-      if (!user) return;
-
-      try {
-        setState(prev => ({ ...prev, loading: true, error: null }));
-
-        const { data, error } = await supabase
-          .from('payments')
-          .update({ status: 'refunded' })
-          .eq('id', id)
-          .eq('user_id', user.id)
-          .select()
-          .single();
-
-        if (error) {
-          throw error;
-        }
-
-        setState(prev => ({
-          ...prev,
-          payments: prev.payments.map(payment =>
-            payment.id === id ? (data as Payment) : payment
-          ),
-          loading: false,
-        }));
-
-        // Registra o evento
-        await logEvent('payment_refunded', {
-          user_id: user.id,
-          payment_id: id,
-        });
-
-        showToast({
-          type: 'success',
-          message: 'Reembolso solicitado',
-          description: 'Seu reembolso está sendo processado',
-        });
-      } catch (error) {
-        console.error('Erro ao solicitar reembolso:', error);
-        recordError(error instanceof Error ? error : new Error('Erro ao solicitar reembolso'));
-        setState(prev => ({
-          ...prev,
-          error: error instanceof Error ? error : new Error('Erro ao solicitar reembolso'),
-          loading: false,
-        }));
-
-        showToast({
-          type: 'error',
-          message: 'Erro ao solicitar reembolso',
-          description: 'Tente novamente mais tarde',
-        });
-      }
-    },
-    [user, logEvent, showToast, recordError]
-  );
+  useEffect(() => {
+    if (user) {
+      fetchPayments();
+    }
+  }, [user, fetchPayments]);
 
   return {
-    ...state,
-    loadPayments,
+    payments,
+    isLoading,
+    error,
+    fetchPayments,
     createPayment,
+    getPaymentById,
     updatePaymentStatus,
-    requestRefund,
+    refundPayment,
   };
 }; 

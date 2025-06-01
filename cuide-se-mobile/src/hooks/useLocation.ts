@@ -1,294 +1,196 @@
-import { useState, useCallback, useEffect } from 'react';
-import * as Location from 'expo-location';
-import { usePermissions } from './usePermissions';
+import { useState, useEffect } from 'react';
+import { useAuth } from './useAuth';
 import { useToast } from './useToast';
 import { useAnalytics } from './useAnalytics';
 import { useCrashlytics } from './useCrashlytics';
-
-interface LocationState {
-  location: Location.LocationObject | null;
-  errorMsg: string | null;
-  loading: boolean;
-  watching: boolean;
-}
-
-interface LocationOptions {
-  accuracy?: Location.Accuracy;
-  timeInterval?: number;
-  distanceInterval?: number;
-  mayShowUserSettingsDialog?: boolean;
-}
+import { locationService, Address, CreateAddressData } from '../services/location';
 
 export const useLocation = () => {
-  const [state, setState] = useState<LocationState>({
-    location: null,
-    errorMsg: null,
-    loading: false,
-    watching: false,
-  });
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [currentLocation, setCurrentLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const { requestPermission } = usePermissions();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const { logEvent } = useAnalytics();
   const { recordError } = useCrashlytics();
 
-  // Solicita permissão de localização
-  const requestLocationPermission = useCallback(async () => {
+  const fetchAddresses = async () => {
     try {
-      const status = await requestPermission('location');
-      return status === 'granted';
-    } catch (error) {
-      recordError(error instanceof Error ? error : new Error('Erro ao solicitar permissão de localização'));
-      return false;
-    }
-  }, [requestPermission, recordError]);
-
-  // Obtém a localização atual
-  const getCurrentLocation = useCallback(async (options?: LocationOptions) => {
-    try {
-      setState(prev => ({ ...prev, loading: true, errorMsg: null }));
-
-      const hasPermission = await requestLocationPermission();
-      if (!hasPermission) {
-        throw new Error('Permissão de localização negada');
-      }
-
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: options?.accuracy || Location.Accuracy.Balanced,
+      setIsLoading(true);
+      setError(null);
+      const data = await locationService.getAddresses();
+      setAddresses(data);
+      logEvent('load_addresses');
+    } catch (err) {
+      const error = err as Error;
+      setError(error);
+      recordError(error);
+      showToast({
+        type: 'error',
+        message: 'Erro ao carregar endereços',
       });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      setState(prev => ({
-        ...prev,
-        location,
-        loading: false,
-        errorMsg: null,
-      }));
-
-      // Registra o evento
-      await logEvent('location_updated', {
+  const getCurrentLocation = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const location = await locationService.getCurrentLocation();
+      setCurrentLocation({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
-        accuracy: location.coords.accuracy,
-        timestamp: location.timestamp,
       });
-
-      return location;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao obter localização';
-      recordError(error instanceof Error ? error : new Error(errorMessage));
-
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        errorMsg: errorMessage,
-      }));
-
+      logEvent('get_current_location');
+    } catch (err) {
+      const error = err as Error;
+      setError(error);
+      recordError(error);
       showToast({
         type: 'error',
-        message: 'Erro ao obter localização',
-        description: errorMessage,
+        message: 'Erro ao obter localização atual',
       });
-
-      return null;
+    } finally {
+      setIsLoading(false);
     }
-  }, [requestLocationPermission, logEvent, recordError, showToast]);
+  };
 
-  // Inicia o monitoramento da localização
-  const startWatchingLocation = useCallback(async (options?: LocationOptions) => {
+  const searchAddresses = async (query: string) => {
     try {
-      setState(prev => ({ ...prev, loading: true, errorMsg: null }));
+      setIsLoading(true);
+      setError(null);
+      const data = await locationService.searchAddresses(query);
+      logEvent('search_addresses', { query });
+      return data;
+    } catch (err) {
+      const error = err as Error;
+      setError(error);
+      recordError(error);
+      showToast({
+        type: 'error',
+        message: 'Erro ao buscar endereços',
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      const hasPermission = await requestLocationPermission();
-      if (!hasPermission) {
-        throw new Error('Permissão de localização negada');
-      }
+  const saveAddress = async (data: CreateAddressData) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const address = await locationService.saveAddress(data);
+      setAddresses(prev => [...prev, address]);
+      logEvent('save_address');
+      return address;
+    } catch (err) {
+      const error = err as Error;
+      setError(error);
+      recordError(error);
+      showToast({
+        type: 'error',
+        message: 'Erro ao salvar endereço',
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      const subscription = await Location.watchPositionAsync(
-        {
-          accuracy: options?.accuracy || Location.Accuracy.Balanced,
-          timeInterval: options?.timeInterval || 1000,
-          distanceInterval: options?.distanceInterval || 10,
-          mayShowUserSettingsDialog: options?.mayShowUserSettingsDialog || true,
-        },
-        (location) => {
-          setState(prev => ({
-            ...prev,
-            location,
-            watching: true,
-            errorMsg: null,
-          }));
-
-          // Registra o evento
-          logEvent('location_updated', {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-            accuracy: location.coords.accuracy,
-            timestamp: location.timestamp,
-          });
-        }
+  const updateAddress = async (id: string, data: Partial<CreateAddressData>) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const address = await locationService.updateAddress(id, data);
+      setAddresses(prev =>
+        prev.map(addr => (addr.id === id ? address : addr))
       );
-
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        watching: true,
-        errorMsg: null,
-      }));
-
-      return subscription;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao iniciar monitoramento de localização';
-      recordError(error instanceof Error ? error : new Error(errorMessage));
-
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        watching: false,
-        errorMsg: errorMessage,
-      }));
-
+      logEvent('update_address');
+      return address;
+    } catch (err) {
+      const error = err as Error;
+      setError(error);
+      recordError(error);
       showToast({
         type: 'error',
-        message: 'Erro ao iniciar monitoramento',
-        description: errorMessage,
+        message: 'Erro ao atualizar endereço',
       });
-
-      return null;
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
-  }, [requestLocationPermission, logEvent, recordError, showToast]);
+  };
 
-  // Para o monitoramento da localização
-  const stopWatchingLocation = useCallback(async (subscription: Location.LocationSubscription) => {
+  const deleteAddress = async (id: string) => {
     try {
-      setState(prev => ({ ...prev, loading: true, errorMsg: null }));
-
-      subscription.remove();
-
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        watching: false,
-        errorMsg: null,
-      }));
-
-      // Registra o evento
-      await logEvent('location_watching_stopped', {
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao parar monitoramento de localização';
-      recordError(error instanceof Error ? error : new Error(errorMessage));
-
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        errorMsg: errorMessage,
-      }));
-
+      setIsLoading(true);
+      setError(null);
+      await locationService.deleteAddress(id);
+      setAddresses(prev => prev.filter(addr => addr.id !== id));
+      logEvent('delete_address');
+    } catch (err) {
+      const error = err as Error;
+      setError(error);
+      recordError(error);
       showToast({
         type: 'error',
-        message: 'Erro ao parar monitoramento',
-        description: errorMessage,
+        message: 'Erro ao excluir endereço',
       });
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
-  }, [logEvent, recordError, showToast]);
+  };
 
-  // Obtém o endereço a partir das coordenadas
-  const getAddressFromCoordinates = useCallback(async (latitude: number, longitude: number) => {
+  const calculateDistance = async (
+    origin: { latitude: number; longitude: number },
+    destination: { latitude: number; longitude: number }
+  ) => {
     try {
-      setState(prev => ({ ...prev, loading: true, errorMsg: null }));
-
-      const addresses = await Location.reverseGeocodeAsync({
-        latitude,
-        longitude,
-      });
-
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        errorMsg: null,
-      }));
-
-      return addresses[0];
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao obter endereço';
-      recordError(error instanceof Error ? error : new Error(errorMessage));
-
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        errorMsg: errorMessage,
-      }));
-
+      setIsLoading(true);
+      setError(null);
+      const distance = await locationService.calculateDistance(origin, destination);
+      logEvent('calculate_distance');
+      return distance;
+    } catch (err) {
+      const error = err as Error;
+      setError(error);
+      recordError(error);
       showToast({
         type: 'error',
-        message: 'Erro ao obter endereço',
-        description: errorMessage,
+        message: 'Erro ao calcular distância',
       });
-
-      return null;
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
-  }, [recordError, showToast]);
+  };
 
-  // Obtém as coordenadas a partir do endereço
-  const getCoordinatesFromAddress = useCallback(async (address: string) => {
-    try {
-      setState(prev => ({ ...prev, loading: true, errorMsg: null }));
-
-      const locations = await Location.geocodeAsync(address);
-
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        errorMsg: null,
-      }));
-
-      return locations[0];
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao obter coordenadas';
-      recordError(error instanceof Error ? error : new Error(errorMessage));
-
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        errorMsg: errorMessage,
-      }));
-
-      showToast({
-        type: 'error',
-        message: 'Erro ao obter coordenadas',
-        description: errorMessage,
-      });
-
-      return null;
+  useEffect(() => {
+    if (user) {
+      fetchAddresses();
     }
-  }, [recordError, showToast]);
-
-  // Calcula a distância entre duas coordenadas
-  const calculateDistance = useCallback(
-    (lat1: number, lon1: number, lat2: number, lon2: number) => {
-      const R = 6371; // Raio da Terra em km
-      const dLat = (lat2 - lat1) * (Math.PI / 180);
-      const dLon = (lon2 - lon1) * (Math.PI / 180);
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * (Math.PI / 180)) *
-          Math.cos(lat2 * (Math.PI / 180)) *
-          Math.sin(dLon / 2) *
-          Math.sin(dLon / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
-    },
-    []
-  );
+  }, [user]);
 
   return {
-    ...state,
+    addresses,
+    currentLocation,
+    isLoading,
+    error,
+    fetchAddresses,
     getCurrentLocation,
-    startWatchingLocation,
-    stopWatchingLocation,
-    getAddressFromCoordinates,
-    getCoordinatesFromAddress,
+    searchAddresses,
+    saveAddress,
+    updateAddress,
+    deleteAddress,
     calculateDistance,
   };
 };
