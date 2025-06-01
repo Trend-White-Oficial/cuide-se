@@ -1,132 +1,191 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { Text } from './Text';
 import { Card } from './Card';
-import { Icon } from './Icon';
+import { Badge } from './Badge';
+import { theme } from '../theme';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface ServiceCardProps {
-  title: string;
+  id: string;
+  name: string;
   description: string;
   price: number;
   duration: number;
+  category: string;
   imageUrl?: string;
-  rating?: number;
   onPress?: () => void;
+  onSelect?: () => void;
 }
 
 export const ServiceCard: React.FC<ServiceCardProps> = ({
-  title,
+  id,
+  name,
   description,
   price,
   duration,
+  category,
   imageUrl,
-  rating,
   onPress,
+  onSelect,
 }) => {
-  const formatPrice = (value: number) => {
-    return `R$ ${value.toFixed(2)}`;
-  };
+  // Formata o preço para o padrão brasileiro
+  const formattedPrice = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(price);
 
+  // Formata a duração em horas e minutos
   const formatDuration = (minutes: number) => {
-    if (minutes < 60) {
-      return `${minutes} min`;
-    }
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
-    return remainingMinutes > 0
-      ? `${hours}h ${remainingMinutes}min`
-      : `${hours}h`;
+
+    if (hours === 0) {
+      return `${remainingMinutes} min`;
+    }
+
+    if (remainingMinutes === 0) {
+      return `${hours}h`;
+    }
+
+    return `${hours}h ${remainingMinutes}min`;
   };
 
   return (
-    <Card onPress={onPress} style={styles.container}>
-      {imageUrl && (
-        <Image source={{ uri: imageUrl }} style={styles.image} />
-      )}
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{title}</Text>
-          {rating !== undefined && (
-            <View style={styles.ratingContainer}>
-              <Icon name="star" size={16} color="#FFD700" />
-              <Text style={styles.rating}>{rating.toFixed(1)}</Text>
+    <Card style={styles.container}>
+      <TouchableOpacity onPress={onPress} style={styles.content}>
+        {imageUrl ? (
+          <Image source={{ uri: imageUrl }} style={styles.image} />
+        ) : (
+          <View style={[styles.image, styles.imagePlaceholder]}>
+            <MaterialIcons
+              name="spa"
+              size={32}
+              color={theme.colors.textSecondary}
+            />
+          </View>
+        )}
+
+        <View style={styles.infoContainer}>
+          <View style={styles.header}>
+            <Text style={styles.name}>{name}</Text>
+            <Badge
+              text={category}
+              color={theme.colors.primary}
+              style={styles.categoryBadge}
+            />
+          </View>
+
+          <Text style={styles.description} numberOfLines={2}>
+            {description}
+          </Text>
+
+          <View style={styles.details}>
+            <View style={styles.detailItem}>
+              <MaterialIcons
+                name="schedule"
+                size={16}
+                color={theme.colors.textSecondary}
+                style={styles.detailIcon}
+              />
+              <Text style={styles.detailText}>{formatDuration(duration)}</Text>
             </View>
+
+            <View style={styles.detailItem}>
+              <MaterialIcons
+                name="attach-money"
+                size={16}
+                color={theme.colors.textSecondary}
+                style={styles.detailIcon}
+              />
+              <Text style={styles.detailText}>{formattedPrice}</Text>
+            </View>
+          </View>
+
+          {onSelect && (
+            <TouchableOpacity
+              onPress={onSelect}
+              style={styles.selectButton}
+            >
+              <Text style={styles.selectButtonText}>Selecionar</Text>
+            </TouchableOpacity>
           )}
         </View>
-
-        <Text style={styles.description} numberOfLines={2}>
-          {description}
-        </Text>
-
-        <View style={styles.footer}>
-          <View style={styles.infoContainer}>
-            <Icon name="clock" size={16} color="#666" />
-            <Text style={styles.infoText}>{formatDuration(duration)}</Text>
-          </View>
-          <Text style={styles.price}>{formatPrice(price)}</Text>
-        </View>
-      </View>
+      </TouchableOpacity>
     </Card>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
-    overflow: 'hidden',
-  },
-  image: {
-    width: '100%',
-    height: 160,
-    resizeMode: 'cover',
+    marginVertical: 8,
+    marginHorizontal: 16,
   },
   content: {
+    flexDirection: 'row',
     padding: 16,
+  },
+  image: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    marginRight: 16,
+  },
+  imagePlaceholder: {
+    backgroundColor: theme.colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  infoContainer: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 8,
   },
-  title: {
+  name: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: 'bold',
+    color: theme.colors.text,
     flex: 1,
     marginRight: 8,
   },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rating: {
-    marginLeft: 4,
-    fontSize: 14,
-    color: '#666',
+  categoryBadge: {
+    alignSelf: 'flex-start',
   },
   description: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.textSecondary,
     marginBottom: 12,
-    lineHeight: 20,
   },
-  footer: {
+  details: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    marginBottom: 16,
   },
-  infoContainer: {
+  detailItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginRight: 16,
   },
-  infoText: {
-    marginLeft: 4,
+  detailIcon: {
+    marginRight: 4,
+  },
+  detailText: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.textSecondary,
   },
-  price: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#007AFF',
+  selectButton: {
+    backgroundColor: theme.colors.primary,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  selectButtonText: {
+    color: theme.colors.white,
+    fontSize: 14,
+    fontWeight: '500',
   },
 }); 

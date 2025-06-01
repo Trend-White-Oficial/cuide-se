@@ -1,177 +1,132 @@
-import React, { memo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useTranslation } from 'react-i18next';
-import { Button } from './ui/Button';
-
-interface Appointment {
-  id: string;
-  date: string;
-  time: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  service: {
-    name: string;
-    duration: number;
-  };
-  professional: {
-    name: string;
-  };
-}
+import React from 'react';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { Text } from './Text';
+import { Card } from './Card';
+import { Badge } from './Badge';
+import { theme } from '../theme';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface AppointmentCardProps {
-  appointment: Appointment;
+  id: string;
+  serviceName: string;
+  professionalName: string;
+  date: string;
+  time: string;
+  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled';
+  onPress?: () => void;
   onCancel?: () => void;
-  onConfirm?: () => void;
-  onComplete?: () => void;
+  onReschedule?: () => void;
 }
 
-const STATUS_COLORS = {
-  pending: '#FFA000',
-  confirmed: '#2196F3',
-  completed: '#4CAF50',
-  cancelled: '#F44336',
-} as const;
-
-const STATUS_TEXTS = {
-  pending: 'Pendente',
-  confirmed: 'Confirmado',
-  completed: 'Concluído',
-  cancelled: 'Cancelado',
-} as const;
-
-export const AppointmentCard = memo<AppointmentCardProps>(({
-  appointment,
+export const AppointmentCard: React.FC<AppointmentCardProps> = ({
+  id,
+  serviceName,
+  professionalName,
+  date,
+  time,
+  status,
+  onPress,
   onCancel,
-  onConfirm,
-  onComplete,
+  onReschedule,
 }) => {
-  const { t } = useTranslation();
-  const navigation = useNavigation();
+  // Formata a data para o padrão brasileiro
+  const formattedDate = format(new Date(date), "dd 'de' MMMM 'de' yyyy", {
+    locale: ptBR,
+  });
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('pt-BR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-    });
-  };
-
-  const formatTime = (time: string) => {
-    return time;
-  };
-
-  const getStatusText = (status: string) => {
+  // Define as cores e textos do status
+  const getStatusConfig = () => {
     switch (status) {
-      case 'pending':
-        return 'Pendente';
+      case 'scheduled':
+        return {
+          color: theme.colors.warning,
+          text: 'Agendado',
+        };
       case 'confirmed':
-        return 'Confirmado';
+        return {
+          color: theme.colors.success,
+          text: 'Confirmado',
+        };
       case 'completed':
-        return 'Concluído';
+        return {
+          color: theme.colors.info,
+          text: 'Concluído',
+        };
       case 'cancelled':
-        return 'Cancelado';
+        return {
+          color: theme.colors.error,
+          text: 'Cancelado',
+        };
       default:
-        return status;
+        return {
+          color: theme.colors.text,
+          text: 'Desconhecido',
+        };
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return '#FFA000';
-      case 'confirmed':
-        return '#2196F3';
-      case 'completed':
-        return '#4CAF50';
-      case 'cancelled':
-        return '#F44336';
-      default:
-        return '#666';
-    }
-  };
-
-  const handlePress = () => {
-    navigation.navigate('AppointmentDetails', { id: appointment.id });
-  };
+  const statusConfig = getStatusConfig();
 
   return (
-    <TouchableOpacity
-      style={styles.container}
-      onPress={handlePress}
-    >
-      <View style={styles.header}>
-        <Text style={styles.serviceName}>{appointment.service.name}</Text>
-        <Text
-          style={[
-            styles.status,
-            { color: getStatusColor(appointment.status) },
-          ]}
-        >
-          {t(`appointments.status.${appointment.status}`)}
-        </Text>
-      </View>
-
-      <View style={styles.info}>
-        <Text style={styles.infoText}>
-          Profissional: {appointment.professional.name}
-        </Text>
-        <Text style={styles.infoText}>
-          Data: {formatDate(appointment.date)}
-        </Text>
-        <Text style={styles.infoText}>
-          Horário: {formatTime(appointment.time)}
-        </Text>
-        <Text style={styles.infoText}>
-          Duração: {appointment.service.duration} minutos
-        </Text>
-      </View>
-
-      <View style={styles.actions}>
-        {appointment.status === 'pending' && onCancel && (
-          <Button
-            title={t('appointments.actions.cancel')}
-            onPress={onCancel}
-            variant="outline"
-            style={styles.actionButton}
+    <Card style={styles.container}>
+      <TouchableOpacity onPress={onPress} style={styles.content}>
+        <View style={styles.header}>
+          <Text style={styles.serviceName}>{serviceName}</Text>
+          <Badge
+            text={statusConfig.text}
+            color={statusConfig.color}
+            style={styles.badge}
           />
-        )}
+        </View>
 
-        {appointment.status === 'pending' && onConfirm && (
-          <Button
-            title={t('appointments.actions.confirm')}
-            onPress={onConfirm}
-            style={styles.actionButton}
-          />
-        )}
+        <View style={styles.infoContainer}>
+          <Text style={styles.label}>Profissional:</Text>
+          <Text style={styles.value}>{professionalName}</Text>
+        </View>
 
-        {appointment.status === 'confirmed' && onComplete && (
-          <Button
-            title={t('appointments.actions.complete')}
-            onPress={onComplete}
-            style={styles.actionButton}
-          />
+        <View style={styles.infoContainer}>
+          <Text style={styles.label}>Data:</Text>
+          <Text style={styles.value}>{formattedDate}</Text>
+        </View>
+
+        <View style={styles.infoContainer}>
+          <Text style={styles.label}>Horário:</Text>
+          <Text style={styles.value}>{time}</Text>
+        </View>
+
+        {status !== 'cancelled' && status !== 'completed' && (
+          <View style={styles.actions}>
+            {onCancel && (
+              <TouchableOpacity
+                onPress={onCancel}
+                style={[styles.button, styles.cancelButton]}
+              >
+                <Text style={styles.buttonText}>Cancelar</Text>
+              </TouchableOpacity>
+            )}
+            {onReschedule && (
+              <TouchableOpacity
+                onPress={onReschedule}
+                style={[styles.button, styles.rescheduleButton]}
+              >
+                <Text style={styles.buttonText}>Reagendar</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         )}
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </Card>
   );
-});
+};
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    marginVertical: 8,
+    marginHorizontal: 16,
+  },
+  content: {
     padding: 16,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   header: {
     flexDirection: 'row',
@@ -182,26 +137,46 @@ const styles = StyleSheet.create({
   serviceName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: theme.colors.text,
+    flex: 1,
   },
-  status: {
+  badge: {
+    marginLeft: 8,
+  },
+  infoContainer: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  label: {
     fontSize: 14,
-    fontWeight: 'bold',
+    color: theme.colors.textSecondary,
+    width: 80,
   },
-  info: {
-    marginBottom: 16,
-  },
-  infoText: {
+  value: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
+    color: theme.colors.text,
+    flex: 1,
   },
   actions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    gap: 8,
+    marginTop: 16,
   },
-  actionButton: {
-    minWidth: 100,
+  button: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  cancelButton: {
+    backgroundColor: theme.colors.error,
+  },
+  rescheduleButton: {
+    backgroundColor: theme.colors.primary,
+  },
+  buttonText: {
+    color: theme.colors.white,
+    fontSize: 14,
+    fontWeight: '500',
   },
 }); 

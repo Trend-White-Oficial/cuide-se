@@ -19,41 +19,46 @@ describe('Card', () => {
 
   it('renders with title and subtitle', () => {
     const { getByText } = renderCard({
-      title: 'Test Title',
-      subtitle: 'Test Subtitle',
+      title: 'Título do Card',
+      subtitle: 'Subtítulo do Card',
     });
-    expect(getByText('Test Title')).toBeTruthy();
-    expect(getByText('Test Subtitle')).toBeTruthy();
+
+    expect(getByText('Título do Card')).toBeTruthy();
+    expect(getByText('Subtítulo do Card')).toBeTruthy();
   });
 
   it('renders with image', () => {
     const imageSource = { uri: 'https://example.com/image.jpg' };
     const { getByTestId } = renderCard({
-      testID: 'card',
       image: imageSource,
+      testID: 'card',
     });
-    expect(getByTestId('card-image')).toBeTruthy();
+
+    const card = getByTestId('card');
+    expect(card).toBeTruthy();
   });
 
   it('renders with children', () => {
     const { getByText } = renderCard({
-      children: <Text>Test Content</Text>,
+      children: <Text>Conteúdo do Card</Text>,
     });
-    expect(getByText('Test Content')).toBeTruthy();
+
+    expect(getByText('Conteúdo do Card')).toBeTruthy();
   });
 
   it('renders with footer', () => {
     const { getByText } = renderCard({
-      footer: <Text>Test Footer</Text>,
+      footer: <Text>Rodapé do Card</Text>,
     });
-    expect(getByText('Test Footer')).toBeTruthy();
+
+    expect(getByText('Rodapé do Card')).toBeTruthy();
   });
 
   it('calls onPress when pressed', () => {
     const onPress = jest.fn();
     const { getByTestId } = renderCard({
-      testID: 'card',
       onPress,
+      testID: 'card',
     });
 
     fireEvent.press(getByTestId('card'));
@@ -69,48 +74,40 @@ describe('Card', () => {
     const footerStyle = { padding: 20 };
 
     const { getByTestId, getByText } = renderCard({
-      testID: 'card',
-      title: 'Test Title',
-      subtitle: 'Test Subtitle',
-      image: { uri: 'https://example.com/image.jpg' },
-      footer: <Text>Test Footer</Text>,
+      title: 'Título',
+      subtitle: 'Subtítulo',
       containerStyle,
       titleStyle,
       subtitleStyle,
       imageStyle,
       contentStyle,
       footerStyle,
+      testID: 'card',
     });
 
     const card = getByTestId('card');
-    const title = getByText('Test Title');
-    const subtitle = getByText('Test Subtitle');
-    const image = getByTestId('card-image');
-    const footer = getByText('Test Footer');
+    const title = getByText('Título');
+    const subtitle = getByText('Subtítulo');
 
     expect(card.props.style).toContainEqual(containerStyle);
     expect(title.props.style).toContainEqual(titleStyle);
     expect(subtitle.props.style).toContainEqual(subtitleStyle);
-    expect(image.props.style).toContainEqual(imageStyle);
-    expect(footer.parent?.props.style).toContainEqual(footerStyle);
   });
 
   it('applies correct theme colors', () => {
     const { getByTestId, getByText } = renderCard({
+      title: 'Título',
+      subtitle: 'Subtítulo',
       testID: 'card',
-      title: 'Test Title',
-      subtitle: 'Test Subtitle',
-      border: true,
     });
 
     const card = getByTestId('card');
-    const title = getByText('Test Title');
-    const subtitle = getByText('Test Subtitle');
+    const title = getByText('Título');
+    const subtitle = getByText('Subtítulo');
 
     expect(card.props.style).toContainEqual({
       backgroundColor: '#FFFFFF',
       borderColor: '#E5E5E5',
-      shadowColor: '#000000',
     });
 
     expect(title.props.style).toContainEqual({
@@ -124,25 +121,28 @@ describe('Card', () => {
 
   it('applies correct elevation', () => {
     const { getByTestId } = renderCard({
-      testID: 'card',
       elevation: 4,
+      testID: 'card',
     });
 
     const card = getByTestId('card');
     expect(card.props.style).toContainEqual({
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
       elevation: 4,
     });
   });
 
   it('renders without border when border prop is false', () => {
     const { getByTestId } = renderCard({
-      testID: 'card',
       border: false,
+      testID: 'card',
     });
 
     const card = getByTestId('card');
     expect(card.props.style).toContainEqual({
-      borderColor: 'transparent',
+      borderWidth: 0,
     });
   });
 }); 

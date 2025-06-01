@@ -1,262 +1,346 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '../services/supabase';
+import { useToast } from './useToast';
+import { useAnalytics } from './useAnalytics';
+import { useCrashlytics } from './useCrashlytics';
+import { useStorage } from './useStorage';
 
 interface Professional {
   id: string;
+  user_id: string;
   name: string;
   email: string;
   phone: string;
-  avatar_url?: string;
-  bio?: string;
+  bio: string;
   specialties: string[];
+  experience_years: number;
   rating: number;
+  total_reviews: number;
+  is_available: boolean;
+  avatar_url?: string;
   created_at: string;
   updated_at: string;
+}
+
+interface ProfessionalState {
+  professionals: Professional[];
+  loading: boolean;
+  error: Error | null;
 }
 
 interface CreateProfessionalData {
   name: string;
   email: string;
   phone: string;
-  avatar_url?: string;
-  bio?: string;
+  bio: string;
   specialties: string[];
-}
-
-interface UpdateProfessionalData {
-  name?: string;
-  email?: string;
-  phone?: string;
+  experience_years: number;
   avatar_url?: string;
-  bio?: string;
-  specialties?: string[];
 }
 
 export const useProfessionals = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [state, setState] = useState<ProfessionalState>({
+    professionals: [],
+    loading: false,
+    error: null,
+  });
 
-  // Busca todos os profissionais
-  const getProfessionals = useCallback(async () => {
+  const { showToast } = useToast();
+  const { logEvent } = useAnalytics();
+  const { recordError } = useCrashlytics();
+  const { getItem, setItem } = useStorage();
+
+  // Carrega todos os profissionais
+  const loadProfessionals = useCallback(async (): Promise<void> => {
     try {
-      setLoading(true);
-      setError(null);
+      setState(prev => ({ ...prev, loading: true, error: null }));
+
+      // Tenta carregar do cache primeiro
+      const cachedProfessionals = await getItem('@CuideSe:professionals');
+      if (cachedProfessionals) {
+        setState(prev => ({
+          ...prev,
+          professionals: cachedProfessionals as Professional[],
+          loading: false,
+        }));
+      }
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from('professionals')
         .select('*')
-        .eq('role', 'professional')
-        .order('name', { ascending: true });
+        .eq('is_available', true)
+        .order('name');
 
       if (error) {
         throw error;
       }
 
-      return data as Professional[];
+      setState(prev => ({
+        ...prev,
+        professionals: data as Professional[],
+        loading: false,
+      }));
+
+      // Salva no cache
+      await setItem('@CuideSe:professionals', data);
+
+      // Registra o evento
+      await logEvent('professionals_loaded', {
+        count: data.length,
+      });
     } catch (error) {
-      setError(error instanceof Error ? error : new Error('Erro desconhecido'));
-      throw error;
-    } finally {
-      setLoading(false);
+      console.error('Erro ao carregar profissionais:', error);
+      recordError(error instanceof Error ? error : new Error('Erro ao carregar profissionais'));
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error : new Error('Erro ao carregar profissionais'),
+        loading: false,
+      }));
+
+      showToast({
+        type: 'error',
+        message: 'Erro ao carregar profissionais',
+        description: 'Tente novamente mais tarde',
+      });
     }
-  }, []);
-
-  // Busca um profissional específico
-  const getProfessional = useCallback(async (id: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', id)
-        .eq('role', 'professional')
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return data as Professional;
-    } catch (error) {
-      setError(error instanceof Error ? error : new Error('Erro desconhecido'));
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Busca profissionais por especialidade
-  const getProfessionalsBySpecialty = useCallback(async (specialty: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'professional')
-        .contains('specialties', [specialty])
-        .order('name', { ascending: true });
-
-      if (error) {
-        throw error;
-      }
-
-      return data as Professional[];
-    } catch (error) {
-      setError(error instanceof Error ? error : new Error('Erro desconhecido'));
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Busca profissionais por nome
-  const searchProfessionals = useCallback(async (searchTerm: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'professional')
-        .ilike('name', `%${searchTerm}%`)
-        .order('name', { ascending: true });
-
-      if (error) {
-        throw error;
-      }
-
-      return data as Professional[];
-    } catch (error) {
-      setError(error instanceof Error ? error : new Error('Erro desconhecido'));
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  }, [getItem, setItem, logEvent, showToast, recordError]);
 
   // Cria um novo profissional
-  const createProfessional = useCallback(async (data: CreateProfessionalData) => {
-    try {
-      setLoading(true);
-      setError(null);
+  const createProfessional = useCallback(
+    async (data: CreateProfessionalData): Promise<void> => {
+      try {
+        setState(prev => ({ ...prev, loading: true, error: null }));
 
-      const { data: professional, error } = await supabase
-        .from('profiles')
-        .insert([
-          {
-            ...data,
-            role: 'professional',
-            rating: 0,
-          },
-        ])
-        .select()
-        .single();
+        const { data: professional, error } = await supabase
+          .from('professionals')
+          .insert([{ ...data, is_available: true, rating: 0, total_reviews: 0 }])
+          .select()
+          .single();
 
-      if (error) {
-        throw error;
+        if (error) {
+          throw error;
+        }
+
+        setState(prev => ({
+          ...prev,
+          professionals: [...prev.professionals, professional as Professional],
+          loading: false,
+        }));
+
+        // Atualiza o cache
+        const updatedProfessionals = [...state.professionals, professional as Professional];
+        await setItem('@CuideSe:professionals', updatedProfessionals);
+
+        // Registra o evento
+        await logEvent('professional_created', {
+          professional_id: professional.id,
+          name: data.name,
+          specialties: data.specialties,
+        });
+
+        showToast({
+          type: 'success',
+          message: 'Profissional criado',
+          description: 'O profissional foi criado com sucesso',
+        });
+      } catch (error) {
+        console.error('Erro ao criar profissional:', error);
+        recordError(error instanceof Error ? error : new Error('Erro ao criar profissional'));
+        setState(prev => ({
+          ...prev,
+          error: error instanceof Error ? error : new Error('Erro ao criar profissional'),
+          loading: false,
+        }));
+
+        showToast({
+          type: 'error',
+          message: 'Erro ao criar profissional',
+          description: 'Tente novamente mais tarde',
+        });
       }
+    },
+    [state.professionals, setItem, logEvent, showToast, recordError]
+  );
 
-      return professional as Professional;
-    } catch (error) {
-      setError(error instanceof Error ? error : new Error('Erro desconhecido'));
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Atualiza um profissional
+  const updateProfessional = useCallback(
+    async (id: string, updates: Partial<Professional>): Promise<void> => {
+      try {
+        setState(prev => ({ ...prev, loading: true, error: null }));
 
-  // Atualiza um profissional existente
-  const updateProfessional = useCallback(async (id: string, data: UpdateProfessionalData) => {
-    try {
-      setLoading(true);
-      setError(null);
+        const { data, error } = await supabase
+          .from('professionals')
+          .update(updates)
+          .eq('id', id)
+          .select()
+          .single();
 
-      const { data: professional, error } = await supabase
-        .from('profiles')
-        .update(data)
-        .eq('id', id)
-        .eq('role', 'professional')
-        .select()
-        .single();
+        if (error) {
+          throw error;
+        }
 
-      if (error) {
-        throw error;
+        setState(prev => ({
+          ...prev,
+          professionals: prev.professionals.map(professional =>
+            professional.id === id ? (data as Professional) : professional
+          ),
+          loading: false,
+        }));
+
+        // Atualiza o cache
+        const updatedProfessionals = state.professionals.map(professional =>
+          professional.id === id ? (data as Professional) : professional
+        );
+        await setItem('@CuideSe:professionals', updatedProfessionals);
+
+        // Registra o evento
+        await logEvent('professional_updated', {
+          professional_id: id,
+          updates: Object.keys(updates),
+        });
+
+        showToast({
+          type: 'success',
+          message: 'Profissional atualizado',
+          description: 'O profissional foi atualizado com sucesso',
+        });
+      } catch (error) {
+        console.error('Erro ao atualizar profissional:', error);
+        recordError(error instanceof Error ? error : new Error('Erro ao atualizar profissional'));
+        setState(prev => ({
+          ...prev,
+          error: error instanceof Error ? error : new Error('Erro ao atualizar profissional'),
+          loading: false,
+        }));
+
+        showToast({
+          type: 'error',
+          message: 'Erro ao atualizar profissional',
+          description: 'Tente novamente mais tarde',
+        });
       }
+    },
+    [state.professionals, setItem, logEvent, showToast, recordError]
+  );
 
-      return professional as Professional;
-    } catch (error) {
-      setError(error instanceof Error ? error : new Error('Erro desconhecido'));
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Atualiza a disponibilidade do profissional
+  const updateAvailability = useCallback(
+    async (id: string, isAvailable: boolean): Promise<void> => {
+      try {
+        setState(prev => ({ ...prev, loading: true, error: null }));
 
-  // Remove um profissional
-  const deleteProfessional = useCallback(async (id: string) => {
-    try {
-      setLoading(true);
-      setError(null);
+        const { error } = await supabase
+          .from('professionals')
+          .update({ is_available: isAvailable })
+          .eq('id', id);
 
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', id)
-        .eq('role', 'professional');
+        if (error) {
+          throw error;
+        }
 
-      if (error) {
-        throw error;
+        setState(prev => ({
+          ...prev,
+          professionals: prev.professionals.map(professional =>
+            professional.id === id
+              ? { ...professional, is_available: isAvailable }
+              : professional
+          ),
+          loading: false,
+        }));
+
+        // Atualiza o cache
+        const updatedProfessionals = state.professionals.map(professional =>
+          professional.id === id
+            ? { ...professional, is_available: isAvailable }
+            : professional
+        );
+        await setItem('@CuideSe:professionals', updatedProfessionals);
+
+        // Registra o evento
+        await logEvent('professional_availability_updated', {
+          professional_id: id,
+          is_available: isAvailable,
+        });
+
+        showToast({
+          type: 'success',
+          message: 'Disponibilidade atualizada',
+          description: `O profissional está ${isAvailable ? 'disponível' : 'indisponível'}`,
+        });
+      } catch (error) {
+        console.error('Erro ao atualizar disponibilidade:', error);
+        recordError(error instanceof Error ? error : new Error('Erro ao atualizar disponibilidade'));
+        setState(prev => ({
+          ...prev,
+          error: error instanceof Error ? error : new Error('Erro ao atualizar disponibilidade'),
+          loading: false,
+        }));
+
+        showToast({
+          type: 'error',
+          message: 'Erro ao atualizar disponibilidade',
+          description: 'Tente novamente mais tarde',
+        });
       }
-    } catch (error) {
-      setError(error instanceof Error ? error : new Error('Erro desconhecido'));
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [state.professionals, setItem, logEvent, showToast, recordError]
+  );
 
-  // Atualiza a avaliação de um profissional
-  const updateProfessionalRating = useCallback(async (id: string, rating: number) => {
-    try {
-      setLoading(true);
-      setError(null);
+  // Filtra profissionais por especialidade
+  const filterProfessionalsBySpecialty = useCallback(
+    (specialty: string): Professional[] => {
+      return state.professionals.filter(professional =>
+        professional.specialties.includes(specialty)
+      );
+    },
+    [state.professionals]
+  );
 
-      const { data: professional, error } = await supabase
-        .from('profiles')
-        .update({ rating })
-        .eq('id', id)
-        .eq('role', 'professional')
-        .select()
-        .single();
+  // Filtra profissionais por experiência
+  const filterProfessionalsByExperience = useCallback(
+    (minYears: number): Professional[] => {
+      return state.professionals.filter(
+        professional => professional.experience_years >= minYears
+      );
+    },
+    [state.professionals]
+  );
 
-      if (error) {
-        throw error;
-      }
+  // Filtra profissionais por avaliação
+  const filterProfessionalsByRating = useCallback(
+    (minRating: number): Professional[] => {
+      return state.professionals.filter(
+        professional => professional.rating >= minRating
+      );
+    },
+    [state.professionals]
+  );
 
-      return professional as Professional;
-    } catch (error) {
-      setError(error instanceof Error ? error : new Error('Erro desconhecido'));
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Busca profissionais por texto
+  const searchProfessionals = useCallback(
+    (query: string): Professional[] => {
+      const normalizedQuery = query.toLowerCase();
+      return state.professionals.filter(
+        professional =>
+          professional.name.toLowerCase().includes(normalizedQuery) ||
+          professional.bio.toLowerCase().includes(normalizedQuery) ||
+          professional.specialties.some(specialty =>
+            specialty.toLowerCase().includes(normalizedQuery)
+          )
+      );
+    },
+    [state.professionals]
+  );
 
   return {
-    loading,
-    error,
-    getProfessionals,
-    getProfessional,
-    getProfessionalsBySpecialty,
-    searchProfessionals,
+    ...state,
+    loadProfessionals,
     createProfessional,
     updateProfessional,
-    deleteProfessional,
-    updateProfessionalRating,
+    updateAvailability,
+    filterProfessionalsBySpecialty,
+    filterProfessionalsByExperience,
+    filterProfessionalsByRating,
+    searchProfessionals,
   };
 }; 

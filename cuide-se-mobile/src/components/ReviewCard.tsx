@@ -1,107 +1,135 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { Text } from './Text';
 import { Card } from './Card';
-import { Icon } from './Icon';
+import { Avatar } from './Avatar';
+import { theme } from '../theme';
+import { MaterialIcons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface ReviewCardProps {
+  id: string;
   userName: string;
   userAvatar?: string;
   rating: number;
   comment: string;
-  date: Date;
-  serviceName: string;
-  professionalName: string;
+  date: string;
+  onPress?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  isEditable?: boolean;
 }
 
 export const ReviewCard: React.FC<ReviewCardProps> = ({
+  id,
   userName,
   userAvatar,
   rating,
   comment,
   date,
-  serviceName,
-  professionalName,
+  onPress,
+  onEdit,
+  onDelete,
+  isEditable = false,
 }) => {
-  const formatDate = (date: Date) => {
-    return format(date, "d 'de' MMMM 'de' yyyy", { locale: ptBR });
-  };
+  // Formata a data para o padrão brasileiro
+  const formattedDate = format(new Date(date), "dd 'de' MMMM 'de' yyyy", {
+    locale: ptBR,
+  });
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }).map((_, index) => (
-      <Icon
-        key={index}
-        name="star"
-        size={16}
-        color={index < rating ? '#FFD700' : '#E0E0E0'}
-        style={styles.star}
-      />
-    ));
+  // Renderiza as estrelas baseado na avaliação
+  const renderStars = () => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <MaterialIcons
+          key={i}
+          name={i <= rating ? 'star' : 'star-border'}
+          size={16}
+          color={i <= rating ? theme.colors.warning : theme.colors.textSecondary}
+          style={styles.star}
+        />
+      );
+    }
+    return stars;
   };
 
   return (
     <Card style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.userInfo}>
-          {userAvatar ? (
-            <Image source={{ uri: userAvatar }} style={styles.avatar} />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Icon name="user" size={20} color="#666" />
+      <TouchableOpacity onPress={onPress} style={styles.content}>
+        <View style={styles.header}>
+          <View style={styles.userInfo}>
+            <Avatar
+              size={40}
+              source={userAvatar ? { uri: userAvatar } : undefined}
+              style={styles.avatar}
+            />
+            <View style={styles.userDetails}>
+              <Text style={styles.userName}>{userName}</Text>
+              <Text style={styles.date}>{formattedDate}</Text>
+            </View>
+          </View>
+
+          {isEditable && (
+            <View style={styles.actions}>
+              {onEdit && (
+                <TouchableOpacity
+                  onPress={onEdit}
+                  style={styles.actionButton}
+                >
+                  <MaterialIcons
+                    name="edit"
+                    size={20}
+                    color={theme.colors.primary}
+                  />
+                </TouchableOpacity>
+              )}
+              {onDelete && (
+                <TouchableOpacity
+                  onPress={onDelete}
+                  style={styles.actionButton}
+                >
+                  <MaterialIcons
+                    name="delete"
+                    size={20}
+                    color={theme.colors.error}
+                  />
+                </TouchableOpacity>
+              )}
             </View>
           )}
-          <View style={styles.userDetails}>
-            <Text style={styles.userName}>{userName}</Text>
-            <Text style={styles.date}>{formatDate(date)}</Text>
-          </View>
         </View>
+
         <View style={styles.ratingContainer}>
-          {renderStars(rating)}
+          {renderStars()}
         </View>
-      </View>
 
-      <Text style={styles.comment}>{comment}</Text>
-
-      <View style={styles.serviceInfo}>
-        <Icon name="scissors" size={16} color="#666" />
-        <Text style={styles.serviceText}>
-          {serviceName} • {professionalName}
-        </Text>
-      </View>
+        <Text style={styles.comment}>{comment}</Text>
+      </TouchableOpacity>
     </Card>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginVertical: 8,
+    marginHorizontal: 16,
+  },
+  content: {
     padding: 16,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 12,
   },
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
-  },
-  avatarPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f5f5f5',
-    alignItems: 'center',
-    justifyContent: 'center',
     marginRight: 12,
   },
   userDetails: {
@@ -109,37 +137,31 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: '500',
+    color: theme.colors.text,
     marginBottom: 2,
   },
   date: {
     fontSize: 12,
-    color: '#666',
+    color: theme.colors.textSecondary,
+  },
+  actions: {
+    flexDirection: 'row',
+  },
+  actionButton: {
+    padding: 4,
+    marginLeft: 8,
   },
   ratingContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    marginBottom: 12,
   },
   star: {
-    marginLeft: 2,
+    marginRight: 4,
   },
   comment: {
     fontSize: 14,
-    color: '#333',
+    color: theme.colors.text,
     lineHeight: 20,
-    marginBottom: 12,
-  },
-  serviceInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    padding: 8,
-    borderRadius: 4,
-  },
-  serviceText: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 8,
   },
 }); 

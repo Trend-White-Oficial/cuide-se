@@ -53,9 +53,13 @@ export const Card: React.FC<CardProps> = ({
       style={[
         styles.container,
         {
-          backgroundColor: colors.card,
-          borderColor: border ? colors.border : 'transparent',
+          backgroundColor: colors.background,
+          borderColor: colors.border,
+          borderWidth: border ? 1 : 0,
           shadowColor: colors.shadow,
+          shadowOffset: { width: 0, height: elevation },
+          shadowOpacity: 0.25,
+          shadowRadius: elevation,
           elevation,
         },
         containerStyle,
@@ -74,9 +78,7 @@ export const Card: React.FC<CardProps> = ({
           <Text
             style={[
               styles.title,
-              {
-                color: colors.text,
-              },
+              { color: colors.text },
               titleStyle,
             ]}
           >
@@ -87,9 +89,7 @@ export const Card: React.FC<CardProps> = ({
           <Text
             style={[
               styles.subtitle,
-              {
-                color: colors.textSecondary,
-              },
+              { color: colors.textSecondary },
               subtitleStyle,
             ]}
           >
@@ -99,15 +99,7 @@ export const Card: React.FC<CardProps> = ({
         {children}
       </View>
       {footer && (
-        <View
-          style={[
-            styles.footer,
-            {
-              borderTopColor: colors.border,
-            },
-            footerStyle,
-          ]}
-        >
+        <View style={[styles.footer, footerStyle]}>
           {footer}
         </View>
       )}
@@ -118,15 +110,8 @@ export const Card: React.FC<CardProps> = ({
 const styles = StyleSheet.create({
   container: {
     borderRadius: 8,
-    borderWidth: 1,
     overflow: 'hidden',
-    marginBottom: 16,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    marginVertical: 8,
   },
   image: {
     width: '100%',
@@ -145,7 +130,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   footer: {
-    borderTopWidth: 1,
     padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E5E5',
   },
 }); 
