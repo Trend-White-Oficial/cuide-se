@@ -687,3 +687,152 @@ Este projeto é estritamente comercial e proprietário. O uso, cópia, modifica�
 ## 📞 Suporte
 
 Para suporte, envie um email para cuide.se.ame@gmail.com ou abra uma issue no GitHub.
+
+## 🌍 Internacionalização
+
+O aplicativo suporta múltiplos idiomas através do i18next. Atualmente disponível em:
+- Português (pt-BR)
+- Inglês (en-US)
+- Espanhol (es-ES)
+
+### Como usar
+
+1. **Importar o hook useTranslation**:
+```typescript
+import { useTranslation } from 'react-i18next';
+
+function MyComponent() {
+  const { t } = useTranslation();
+  return <Text>{t('common.loading')}</Text>;
+}
+```
+
+2. **Mudar o idioma**:
+```typescript
+import { useLanguage } from '../hooks/useLanguage';
+
+function LanguageSwitcher() {
+  const { changeLanguage } = useLanguage();
+  return (
+    <Button 
+      onPress={() => changeLanguage('en-US')} 
+      title="Switch to English" 
+    />
+  );
+}
+```
+
+3. **Adicionar novas traduções**:
+- Adicione as chaves em `src/i18n/locales/pt-BR.json`
+- Adicione as traduções correspondentes em `en-US.json` e `es-ES.json`
+
+### Estrutura de Arquivos
+
+```
+src/
+  ├── i18n/
+  │   ├── index.ts           # Configuração do i18next
+  │   └── locales/           # Arquivos de tradução
+  │       ├── pt-BR.json
+  │       ├── en-US.json
+  │       └── es-ES.json
+  ├── hooks/
+  │   └── useLanguage.ts     # Hook para gerenciar idioma
+  └── components/
+      └── LanguageSelector.tsx # Componente de seleção de idioma
+```
+
+### Boas Práticas
+
+1. **Organização de Chaves**:
+   - Use namespaces para organizar traduções
+   - Exemplo: `common.loading`, `auth.login`, `appointments.title`
+
+2. **Interpolação**:
+```typescript
+// No arquivo de tradução
+{
+  "welcome": "Olá, {{name}}!"
+}
+
+// No componente
+t('welcome', { name: 'João' })
+```
+
+3. **Pluralização**:
+```typescript
+// No arquivo de tradução
+{
+  "items": {
+    "one": "{{count}} item",
+    "other": "{{count}} itens"
+  }
+}
+
+// No componente
+t('items', { count: 2 })
+```
+
+4. **Formatação de Datas**:
+```typescript
+import { format } from 'date-fns';
+import { ptBR, enUS, es } from 'date-fns/locale';
+
+const locales = {
+  'pt-BR': ptBR,
+  'en-US': enUS,
+  'es-ES': es,
+};
+
+const formatDate = (date: Date, language: string) => {
+  return format(date, 'PPP', { locale: locales[language] });
+};
+```
+
+### Testes
+
+Para testar componentes que usam traduções:
+
+```typescript
+import { render } from '@testing-library/react-native';
+import { I18nextProvider } from 'react-i18next';
+import i18n from '../i18n';
+
+const renderWithI18n = (component: React.ReactElement) => {
+  return render(
+    <I18nextProvider i18n={i18n}>
+      {component}
+    </I18nextProvider>
+  );
+};
+```
+
+## 📱 Instalação
+
+```bash
+# Instalar dependências
+npm install
+
+# Iniciar o app
+npm start
+```
+
+## 🧪 Testes
+
+```bash
+# Rodar testes
+npm test
+
+# Rodar testes com cobertura
+npm test -- --coverage
+```
+
+## 📝 Linting e Formatação
+
+```bash
+# Rodar lint
+npm run lint
+
+# Formatar código
+npm run format
+```

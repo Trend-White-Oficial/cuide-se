@@ -11,4 +11,6 @@ declare module '@env' {
   export const ENABLE_NOTIFICATIONS: string;
   export const AUTH_TOKEN_KEY: string;
   export const AUTH_REFRESH_TOKEN_KEY: string;
+  export const SUPABASE_URL: string;
+  export const SUPABASE_ANON_KEY: string;
 } 

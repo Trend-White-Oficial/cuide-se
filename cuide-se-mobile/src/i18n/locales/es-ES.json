@@ -1,0 +1,67 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "save": "Guardar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "finish": "Finalizar"
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "register": "Registrarse",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "resetPassword": "Restablecer contraseña",
+    "name": "Nombre",
+    "phone": "Teléfono"
+  },
+  "appointments": {
+    "title": "Citas",
+    "new": "Nueva cita",
+    "date": "Fecha",
+    "time": "Hora",
+    "service": "Servicio",
+    "professional": "Profesional",
+    "status": {
+      "pending": "Pendiente",
+      "confirmed": "Confirmado",
+      "completed": "Completado",
+      "cancelled": "Cancelado"
+    },
+    "actions": {
+      "cancel": "Cancelar cita",
+      "confirm": "Confirmar cita",
+      "complete": "Completar cita"
+    }
+  },
+  "profile": {
+    "title": "Perfil",
+    "personalInfo": "Información personal",
+    "preferences": "Preferencias",
+    "notifications": "Notificaciones",
+    "language": "Idioma",
+    "theme": "Tema",
+    "logout": "Cerrar sesión"
+  },
+  "settings": {
+    "title": "Configuración",
+    "notifications": {
+      "title": "Notificaciones",
+      "appointments": "Recordatorios de citas",
+      "promotions": "Promociones y ofertas",
+      "news": "Novedades"
+    },
+    "privacy": {
+      "title": "Privacidad",
+      "dataUsage": "Uso de datos",
+      "location": "Ubicación"
+    }
+  }
+} 

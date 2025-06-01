@@ -1,106 +1,142 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Appointment } from '../types';
-import { useAuth } from './useAuth';
+import { useState } from 'react';
+import { supabase } from '../services/supabase';
 
-interface CreateAppointmentData {
-  professionalId: string;
-  serviceId: string;
+interface Appointment {
+  id: string;
   date: string;
   time: string;
-  notes?: string;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  services: {
+    name: string;
+    price: number;
+    duration: number;
+  };
+  professionals: {
+    name: string;
+    avatar_url?: string;
+  };
 }
 
-export function useAppointments() {
-  const { token } = useAuth();
-  const queryClient = useQueryClient();
+export const useAppointments = () => {
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const { data: appointments, isLoading } = useQuery({
-    queryKey: ['appointments'],
-    queryFn: async () => {
-      const response = await fetch('https://api.cuide-se.com/appointments', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+  const fetchAppointments = async (userId: string) => {
+    setLoading(true);
+    setError(null);
 
-      if (!response.ok) {
-        throw new Error('Erro ao carregar agendamentos');
-      }
+    try {
+      const { data, error } = await supabase
+        .from('appointments')
+        .select(`
+          id,
+          date,
+          time,
+          status,
+          services (
+            name,
+            price,
+            duration
+          ),
+          professionals (
+            name,
+            avatar_url
+          )
+        `)
+        .eq('client_id', userId)
+        .order('date', { ascending: true })
+        .order('time', { ascending: true });
 
-      return response.json();
-    },
-    enabled: !!token,
-  });
+      if (error) throw error;
 
-  const createAppointment = useMutation({
-    mutationFn: async (data: CreateAppointmentData) => {
-      const response = await fetch('https://api.cuide-se.com/appointments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao criar agendamento');
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
-    },
-  });
-
-  const cancelAppointment = useMutation({
-    mutationFn: async (appointmentId: string) => {
-      const response = await fetch(`https://api.cuide-se.com/appointments/${appointmentId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status: 'cancelled' }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao cancelar agendamento');
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
-    },
-  });
-
-  const getPendingAppointments = () => {
-    return appointments?.filter((appointment: Appointment) => 
-      appointment.status === 'pending' || appointment.status === 'confirmed'
-    ) || [];
+      setAppointments(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar agendamentos:', error);
+      setError('Não foi possível carregar os agendamentos.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getCompletedAppointments = () => {
-    return appointments?.filter((appointment: Appointment) => 
-      appointment.status === 'completed'
-    ) || [];
+  const createAppointment = async (appointmentData: {
+    client_id: string;
+    professional_id: string;
+    service_id: string;
+    date: string;
+    time: string;
+    status: string;
+    price: number;
+  }) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data, error } = await supabase
+        .from('appointments')
+        .insert([appointmentData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return data;
+    } catch (error) {
+      console.error('Erro ao criar agendamento:', error);
+      setError('Não foi possível criar o agendamento.');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getCancelledAppointments = () => {
-    return appointments?.filter((appointment: Appointment) => 
-      appointment.status === 'cancelled'
-    ) || [];
+  const updateAppointmentStatus = async (
+    appointmentId: string,
+    status: string
+  ) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data, error } = await supabase
+        .from('appointments')
+        .update({ status })
+        .eq('id', appointmentId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return data;
+    } catch (error) {
+      console.error('Erro ao atualizar status do agendamento:', error);
+      setError('Não foi possível atualizar o status do agendamento.');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cancelAppointment = async (appointmentId: string) => {
+    return updateAppointmentStatus(appointmentId, 'cancelled');
+  };
+
+  const confirmAppointment = async (appointmentId: string) => {
+    return updateAppointmentStatus(appointmentId, 'confirmed');
+  };
+
+  const completeAppointment = async (appointmentId: string) => {
+    return updateAppointmentStatus(appointmentId, 'completed');
   };
 
   return {
     appointments,
-    isLoading,
+    loading,
+    error,
+    fetchAppointments,
     createAppointment,
     cancelAppointment,
-    getPendingAppointments,
-    getCompletedAppointments,
-    getCancelledAppointments,
+    confirmAppointment,
+    completeAppointment,
   };
-} 
+}; 

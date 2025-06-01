@@ -1,159 +1,130 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, ScrollView, RefreshControl } from 'react-native';
-import { Header } from '../components/ui/Header';
-import { SearchBar } from '../components/ui/SearchBar';
-import { ServiceCard } from '../components/ui/ServiceCard';
-import { ProfessionalCard } from '../components/ui/ProfessionalCard';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { ErrorMessage } from '../components/ui/ErrorMessage';
-import { EmptyState } from '../components/ui/EmptyState';
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { supabase } from '../services/supabase';
-import { Service, Professional } from '../types';
+import { useAuth } from '../hooks/useAuth';
+import { Button } from '../components/ui/Button';
 
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [services, setServices] = useState<Service[]>([]);
-  const [professionals, setProfessionals] = useState<Professional[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { user, signOut } = useAuth();
 
-  const fetchData = async () => {
+  const handleSignOut = async () => {
     try {
-      setError(null);
-      const [servicesResponse, professionalsResponse] = await Promise.all([
-        supabase.from('services').select('*').limit(5),
-        supabase.from('professionals').select('*').limit(5),
-      ]);
-
-      if (servicesResponse.error) throw servicesResponse.error;
-      if (professionalsResponse.error) throw professionalsResponse.error;
-
-      setServices(servicesResponse.data);
-      setProfessionals(professionalsResponse.data);
-    } catch (err) {
-      setError('Erro ao carregar dados. Tente novamente.');
-      console.error(err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+      await signOut();
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      Alert.alert('Erro', 'Não foi possível fazer logout.');
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchData();
-  };
-
-  if (loading) {
-    return <LoadingSpinner message="Carregando..." />;
-  }
-
-  if (error) {
-    return (
-      <ErrorMessage
-        message={error}
-        onRetry={fetchData}
-      />
-    );
-  }
-
   return (
-    <View style={styles.container}>
-      <Header
-        title="Cuide-se"
-        showBackButton={false}
-        rightAction={{
-          icon: 'bell-outline',
-          onPress: () => navigation.navigate('Notifications'),
-        }}
-      />
-      <ScrollView
-        style={styles.content}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-          />
-        }
-      >
-        <SearchBar
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder="Buscar serviços ou profissionais..."
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.welcome}>Bem-vindo(a),</Text>
+          <Text style={styles.userName}>{user?.email}</Text>
+        </View>
+        <Button
+          title="Sair"
+          onPress={handleSignOut}
+          variant="outline"
+          style={styles.signOutButton}
         />
+      </View>
 
-        <View style={styles.section}>
-          <Header
-            title="Serviços em Destaque"
-            showBackButton={false}
-            rightAction={{
-              icon: 'chevron-right',
-              onPress: () => navigation.navigate('Services'),
-            }}
-          />
-          {services.length > 0 ? (
-            services.map(service => (
-              <ServiceCard
-                key={service.id}
-                service={service}
-                onPress={() => navigation.navigate('ServiceDetails', { service })}
-              />
-            ))
-          ) : (
-            <EmptyState
-              icon="spa"
-              title="Nenhum serviço encontrado"
-              message="Não há serviços disponíveis no momento."
-            />
-          )}
-        </View>
+      <View style={styles.content}>
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => navigation.navigate('Appointments' as never)}
+        >
+          <Text style={styles.cardTitle}>Meus Agendamentos</Text>
+          <Text style={styles.cardDescription}>
+            Veja e gerencie seus agendamentos
+          </Text>
+        </TouchableOpacity>
 
-        <View style={styles.section}>
-          <Header
-            title="Profissionais em Destaque"
-            showBackButton={false}
-            rightAction={{
-              icon: 'chevron-right',
-              onPress: () => navigation.navigate('Professionals'),
-            }}
-          />
-          {professionals.length > 0 ? (
-            professionals.map(professional => (
-              <ProfessionalCard
-                key={professional.id}
-                professional={professional}
-                onPress={() => navigation.navigate('ProfessionalDetails', { professional })}
-              />
-            ))
-          ) : (
-            <EmptyState
-              icon="account-group"
-              title="Nenhum profissional encontrado"
-              message="Não há profissionais disponíveis no momento."
-            />
-          )}
-        </View>
-      </ScrollView>
-    </View>
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => navigation.navigate('CreateAppointment' as never)}
+        >
+          <Text style={styles.cardTitle}>Novo Agendamento</Text>
+          <Text style={styles.cardDescription}>
+            Agende um novo serviço
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => navigation.navigate('Profile' as never)}
+        >
+          <Text style={styles.cardTitle}>Meu Perfil</Text>
+          <Text style={styles.cardDescription}>
+            Gerencie suas informações pessoais
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
     backgroundColor: '#fff',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  welcome: {
+    fontSize: 16,
+    color: '#666',
+  },
+  userName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  signOutButton: {
+    minWidth: 80,
   },
   content: {
-    flex: 1,
-  },
-  section: {
     padding: 16,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  cardDescription: {
+    fontSize: 14,
+    color: '#666',
   },
 });

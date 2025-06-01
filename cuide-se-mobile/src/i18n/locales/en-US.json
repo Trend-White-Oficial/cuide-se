@@ -1,0 +1,67 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "back": "Back",
+    "next": "Next",
+    "finish": "Finish"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "resetPassword": "Reset password",
+    "name": "Name",
+    "phone": "Phone"
+  },
+  "appointments": {
+    "title": "Appointments",
+    "new": "New appointment",
+    "date": "Date",
+    "time": "Time",
+    "service": "Service",
+    "professional": "Professional",
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "actions": {
+      "cancel": "Cancel appointment",
+      "confirm": "Confirm appointment",
+      "complete": "Complete appointment"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "personalInfo": "Personal information",
+    "preferences": "Preferences",
+    "notifications": "Notifications",
+    "language": "Language",
+    "theme": "Theme",
+    "logout": "Logout"
+  },
+  "settings": {
+    "title": "Settings",
+    "notifications": {
+      "title": "Notifications",
+      "appointments": "Appointment reminders",
+      "promotions": "Promotions and offers",
+      "news": "News"
+    },
+    "privacy": {
+      "title": "Privacy",
+      "dataUsage": "Data usage",
+      "location": "Location"
+    }
+  }
+} 

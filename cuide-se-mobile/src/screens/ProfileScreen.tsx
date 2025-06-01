@@ -1,156 +1,154 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
-import { Header } from '../components/ui/Header';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+} from 'react-native';
+import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../services/supabase';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { ErrorMessage } from '../components/ui/ErrorMessage';
-import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../services/supabase';
 
 export const ProfileScreen: React.FC = () => {
-  const { user, signOut } = useAuth();
-  const [name, setName] = useState(user?.name || '');
-  const [email, setEmail] = useState(user?.email || '');
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const { user } = useAuth();
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleUpdateProfile = async () => {
+  useEffect(() => {
+    if (user?.id) {
+      fetchProfile();
+    }
+  }, [user?.id]);
+
+  const fetchProfile = async () => {
     try {
-      setError(null);
-      setLoading(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user?.id)
+        .single();
 
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({ name, email })
-        .eq('id', user?.id);
+      if (error) throw error;
 
-      if (updateError) throw updateError;
+      if (data) {
+        setName(data.name || '');
+        setPhone(data.phone || '');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar perfil:', error);
+      setError('Não foi possível carregar seu perfil.');
+    }
+  };
 
-      if (newPassword) {
-        if (newPassword !== confirmPassword) {
-          setError('As senhas não coincidem.');
-          return;
-        }
+  const handleUpdateProfile = async () => {
+    if (!name) {
+      Alert.alert('Erro', 'Por favor, preencha seu nome.');
+      return;
+    }
 
-        const { error: passwordError } = await supabase.auth.updateUser({
-          password: newPassword,
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user?.id,
+          name,
+          phone,
+          updated_at: new Date().toISOString(),
         });
 
-        if (passwordError) throw passwordError;
-      }
+      if (error) throw error;
 
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (err) {
-      setError('Erro ao atualizar perfil.');
-      console.error(err);
+      Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error);
+      setError('Não foi possível atualizar seu perfil.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
-    return <LoadingSpinner message="Atualizando perfil..." />;
-  }
+  if (loading) return <LoadingSpinner fullScreen />;
+  if (error) return <ErrorMessage message={error} onRetry={fetchProfile} />;
 
   return (
-    <View style={styles.container}>
-      <Header title="Meu Perfil" />
-      <ScrollView style={styles.content}>
-        <View style={styles.section}>
-          <Header title="Dados Pessoais" showBackButton={false} />
+    <ScrollView style={styles.container}>
+      <View style={styles.content}>
+        <Text style={styles.title}>Meu Perfil</Text>
+
+        <View style={styles.form}>
+          <Input
+            label="Email"
+            value={user?.email || ''}
+            editable={false}
+            containerStyle={styles.inputContainer}
+          />
+
           <Input
             label="Nome"
             value={name}
             onChangeText={setName}
-            style={styles.input}
+            placeholder="Digite seu nome"
+            containerStyle={styles.inputContainer}
           />
-          <Input
-            label="E-mail"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            style={styles.input}
-          />
-        </View>
 
-        <View style={styles.section}>
-          <Header title="Alterar Senha" showBackButton={false} />
           <Input
-            label="Senha Atual"
-            value={currentPassword}
-            onChangeText={setCurrentPassword}
-            secureTextEntry
-            style={styles.input}
+            label="Telefone"
+            value={phone}
+            onChangeText={setPhone}
+            placeholder="Digite seu telefone"
+            keyboardType="phone-pad"
+            containerStyle={styles.inputContainer}
           />
-          <Input
-            label="Nova Senha"
-            value={newPassword}
-            onChangeText={setNewPassword}
-            secureTextEntry
-            style={styles.input}
-          />
-          <Input
-            label="Confirmar Nova Senha"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-            style={styles.input}
-          />
-        </View>
 
-        {error && (
-          <View style={styles.errorContainer}>
-            <ErrorMessage message={error} />
-          </View>
-        )}
-
-        <View style={styles.buttonContainer}>
           <Button
             title="Salvar Alterações"
             onPress={handleUpdateProfile}
             style={styles.button}
           />
-          <Button
-            title="Sair"
-            onPress={signOut}
-            variant="outline"
-            style={styles.button}
-          />
         </View>
-      </ScrollView>
-    </View>
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
   },
   content: {
-    flex: 1,
-  },
-  section: {
     padding: 16,
   },
-  input: {
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 24,
+  },
+  form: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  inputContainer: {
     marginBottom: 16,
   },
-  errorContainer: {
-    padding: 16,
-  },
-  buttonContainer: {
-    padding: 16,
-    gap: 12,
-  },
   button: {
-    width: '100%',
+    marginTop: 8,
   },
 }); 

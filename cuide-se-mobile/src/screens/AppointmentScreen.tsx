@@ -1,230 +1,242 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
-import { Text, Button, Card, TextInput, RadioButton } from 'react-native-paper';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Alert,
+} from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../../App';
-import { theme } from '../theme';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../services/supabase';
+import { Button } from '../components/ui/Button';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { ErrorMessage } from '../components/ui/ErrorMessage';
 
-// Função para buscar dados do profissional e serviço
-async function fetchProfessionalAndService(professionalId: string, serviceId: string) {
-  const response = await fetch(`https://api.cuide-se.com/professionals/${professionalId}`);
-  if (!response.ok) {
-    throw new Error('Erro ao buscar dados do profissional');
-  }
-  const professional = await response.json();
-  const service = professional.services.find((s: any) => s.id === serviceId);
-  if (!service) {
-    throw new Error('Serviço não encontrado');
-  }
-  return { professional, service };
+interface Appointment {
+  id: string;
+  date: string;
+  time: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  service: {
+    name: string;
+    duration: number;
+    price: number;
+  };
+  professional: {
+    name: string;
+  };
 }
 
-type AppointmentScreenRouteProp = RouteProp<RootStackParamList, 'Appointment'>;
-type AppointmentScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
+const STATUS_COLORS = {
+  pending: '#ffa000',
+  confirmed: '#2196f3',
+  completed: '#4caf50',
+  cancelled: '#f44336',
+} as const;
 
-export default function AppointmentScreen() {
-  const route = useRoute<AppointmentScreenRouteProp>();
-  const navigation = useNavigation<AppointmentScreenNavigationProp>();
-  const { professionalId, serviceId } = route.params;
+const STATUS_TEXTS = {
+  pending: 'Pendente',
+  confirmed: 'Confirmado',
+  completed: 'Concluído',
+  cancelled: 'Cancelado',
+} as const;
 
-  const [professional, setProfessional] = useState<any>(null);
-  const [service, setService] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+export const AppointmentScreen: React.FC = () => {
+  const route = useRoute();
+  const navigation = useNavigation();
+  const { user } = useAuth();
+  const [appointment, setAppointment] = useState<Appointment | null>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [date, setDate] = useState(new Date());
-  const [time, setTime] = useState(new Date());
-  const [notes, setNotes] = useState<string>('');
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const fetchAppointment = useCallback(async () => {
+    const appointmentId = (route.params as { id: string })?.id;
+    if (!appointmentId) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { data, error } = await supabase
+        .from('appointments')
+        .select(`
+          *,
+          service:services(name, duration, price),
+          professional:professionals(name)
+        `)
+        .eq('id', appointmentId)
+        .single();
+
+      if (error) throw error;
+      setAppointment(data);
+    } catch (error) {
+      console.error('Erro ao buscar agendamento:', error);
+      setError('Não foi possível carregar os detalhes do agendamento.');
+    } finally {
+      setLoading(false);
+    }
+  }, [route.params]);
 
   useEffect(() => {
-    async function loadProfessionalAndService() {
-      try {
-        const { professional, service } = await fetchProfessionalAndService(professionalId, serviceId);
-        setProfessional(professional);
-        setService(service);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadProfessionalAndService();
-  }, [professionalId, serviceId]);
+    fetchAppointment();
+  }, [fetchAppointment]);
 
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
+  const handleCancelAppointment = useCallback(async () => {
+    if (!appointment) return;
+
+    Alert.alert(
+      'Cancelar Agendamento',
+      'Tem certeza que deseja cancelar este agendamento?',
+      [
+        { text: 'Não', style: 'cancel' },
+        {
+          text: 'Sim',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              setError(null);
+
+              const { error } = await supabase
+                .from('appointments')
+                .update({ status: 'cancelled' })
+                .eq('id', appointment.id);
+
+              if (error) throw error;
+
+              Alert.alert(
+                'Sucesso',
+                'Agendamento cancelado com sucesso!',
+                [{ text: 'OK', onPress: () => navigation.goBack() }]
+              );
+            } catch (error) {
+              console.error('Erro ao cancelar agendamento:', error);
+              setError('Não foi possível cancelar o agendamento.');
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
     );
-  }
+  }, [appointment, navigation]);
 
-  if (error) {
-    return (
-      <View style={styles.container}>
-        <Text>Erro: {error}</Text>
-      </View>
-    );
-  }
-
-  if (!professional || !service) {
-    return (
-      <View style={styles.container}>
-        <Text>Serviço não encontrado</Text>
-      </View>
-    );
-  }
-
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setDate(selectedDate);
-    }
-  };
-
-  const handleTimeChange = (event: any, selectedTime?: Date) => {
-    setShowTimePicker(false);
-    if (selectedTime) {
-      setTime(selectedTime);
-    }
-  };
-
-  const handleConfirm = () => {
-    navigation.navigate('AppointmentConfirmation', {
-      professionalId,
-      serviceId,
-      date: date.toISOString(),
-      time: time.toISOString(),
-      notes,
-      paymentMethod: 'cartão',
+  const formatDate = useCallback((date: string) => {
+    return new Date(date).toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
     });
-  };
+  }, []);
+
+  const formatPrice = useCallback((price: number) => {
+    return `R$ ${price.toFixed(2)}`;
+  }, []);
+
+  if (loading) return <LoadingSpinner fullScreen />;
+  if (error) return <ErrorMessage message={error} onRetry={fetchAppointment} />;
+  if (!appointment) return null;
 
   return (
     <ScrollView style={styles.container}>
-      <Card style={styles.section}>
-        <Card.Content>
-          <Text style={styles.sectionTitle}>Detalhes do Serviço</Text>
-          <Text style={styles.serviceName}>{service.name}</Text>
-          <Text style={styles.professionalName}>com {professional.name}</Text>
-          <Text style={styles.servicePrice}>
-            R$ {service.price.toFixed(2)}
-          </Text>
-          <Text style={styles.serviceDuration}>
-            Duração: {service.duration} minutos
-          </Text>
-        </Card.Content>
-      </Card>
+      <View style={styles.content}>
+        <Text style={styles.title}>Detalhes do Agendamento</Text>
 
-      <Card style={styles.section}>
-        <Card.Content>
-          <Text style={styles.sectionTitle}>Selecione a Data e Hora</Text>
+        <View style={styles.card}>
+          <View style={styles.section}>
+            <Text style={styles.label}>Serviço</Text>
+            <Text style={styles.value}>{appointment.service.name}</Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.label}>Duração</Text>
+            <Text style={styles.value}>{appointment.service.duration} minutos</Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.label}>Valor</Text>
+            <Text style={styles.value}>{formatPrice(appointment.service.price)}</Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.label}>Profissional</Text>
+            <Text style={styles.value}>{appointment.professional.name}</Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.label}>Data</Text>
+            <Text style={styles.value}>{formatDate(appointment.date)}</Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.label}>Horário</Text>
+            <Text style={styles.value}>{appointment.time}</Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.label}>Status</Text>
+            <Text style={[styles.status, { color: STATUS_COLORS[appointment.status] }]}>
+              {STATUS_TEXTS[appointment.status]}
+            </Text>
+          </View>
+        </View>
+
+        {appointment.status === 'pending' && (
           <Button
-            mode="outlined"
-            onPress={() => setShowDatePicker(true)}
-            style={styles.button}
-          >
-            Data: {date.toLocaleDateString()}
-          </Button>
-
-          <Button
-            mode="outlined"
-            onPress={() => setShowTimePicker(true)}
-            style={styles.button}
-          >
-            Hora: {time.toLocaleTimeString()}
-          </Button>
-
-          {showDatePicker && (
-            <DateTimePicker
-              value={date}
-              mode="date"
-              onChange={handleDateChange}
-              minimumDate={new Date()}
-            />
-          )}
-
-          {showTimePicker && (
-            <DateTimePicker
-              value={time}
-              mode="time"
-              onChange={handleTimeChange}
-            />
-          )}
-        </Card.Content>
-      </Card>
-
-      <Card style={styles.section}>
-        <Card.Content>
-          <Text style={styles.sectionTitle}>Observações</Text>
-          <TextInput
-            label="Observações"
-            value={notes}
-            onChangeText={setNotes}
-            style={styles.input}
-            multiline
-            numberOfLines={4}
+            title="Cancelar Agendamento"
+            onPress={handleCancelAppointment}
+            variant="outline"
+            style={styles.cancelButton}
           />
-        </Card.Content>
-      </Card>
-
-      <Button
-        mode="contained"
-        onPress={handleConfirm}
-        style={styles.confirmButton}
-      >
-        Confirmar Agendamento
-      </Button>
+        )}
+      </View>
     </ScrollView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
   },
-  section: {
-    margin: 16,
+  content: {
+    padding: 16,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  serviceName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  professionalName: {
-    fontSize: 16,
-    color: theme.colors.placeholder,
-    marginBottom: 8,
-  },
-  servicePrice: {
+  title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: theme.colors.primary,
-    marginBottom: 4,
+    color: '#333',
+    marginBottom: 24,
   },
-  serviceDuration: {
-    fontSize: 14,
-    color: theme.colors.placeholder,
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  input: {
+  section: {
     marginBottom: 16,
   },
-  button: {
-    marginVertical: 8,
+  label: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
   },
-  confirmButton: {
-    margin: 16,
-    marginTop: 0,
+  value: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+  },
+  status: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  cancelButton: {
+    marginTop: 24,
   },
 });

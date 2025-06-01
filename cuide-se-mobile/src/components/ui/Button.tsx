@@ -1,103 +1,112 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, ViewStyle, TextStyle } from 'react-native';
-import { Text, useTheme } from 'react-native-paper';
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  ViewStyle,
+  TextStyle,
+} from 'react-native';
 
 interface ButtonProps {
-  onPress: () => void;
   title: string;
+  onPress: () => void;
   variant?: 'primary' | 'secondary' | 'outline';
-  size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
+  loading?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
-  loading?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = ({
-  onPress,
   title,
+  onPress,
   variant = 'primary',
-  size = 'medium',
   disabled = false,
+  loading = false,
   style,
   textStyle,
-  loading = false,
 }) => {
-  const theme = useTheme();
-
-  const getBackgroundColor = () => {
-    if (disabled) return theme.colors.disabled;
+  const getButtonStyle = () => {
     switch (variant) {
-      case 'primary':
-        return theme.colors.primary;
       case 'secondary':
-        return theme.colors.secondary;
+        return styles.secondaryButton;
       case 'outline':
-        return 'transparent';
+        return styles.outlineButton;
       default:
-        return theme.colors.primary;
+        return styles.primaryButton;
     }
   };
 
-  const getTextColor = () => {
-    if (disabled) return theme.colors.onDisabled;
+  const getTextStyle = () => {
     switch (variant) {
+      case 'secondary':
+        return styles.secondaryText;
       case 'outline':
-        return theme.colors.primary;
+        return styles.outlineText;
       default:
-        return theme.colors.onPrimary;
-    }
-  };
-
-  const getPadding = () => {
-    switch (size) {
-      case 'small':
-        return { paddingVertical: 8, paddingHorizontal: 16 };
-      case 'large':
-        return { paddingVertical: 16, paddingHorizontal: 32 };
-      default:
-        return { paddingVertical: 12, paddingHorizontal: 24 };
+        return styles.primaryText;
     }
   };
 
   return (
     <TouchableOpacity
-      onPress={onPress}
-      disabled={disabled || loading}
       style={[
         styles.button,
-        {
-          backgroundColor: getBackgroundColor(),
-          borderColor: variant === 'outline' ? theme.colors.primary : 'transparent',
-          borderWidth: variant === 'outline' ? 1 : 0,
-          ...getPadding(),
-        },
+        getButtonStyle(),
+        disabled && styles.disabledButton,
         style,
       ]}
+      onPress={onPress}
+      disabled={disabled || loading}
     >
-      <Text
-        style={[
-          styles.text,
-          {
-            color: getTextColor(),
-            fontSize: size === 'small' ? 14 : size === 'large' ? 18 : 16,
-          },
-          textStyle,
-        ]}
-      >
-        {loading ? 'Carregando...' : title}
-      </Text>
+      {loading ? (
+        <ActivityIndicator
+          color={variant === 'outline' ? '#2196f3' : '#fff'}
+          size="small"
+        />
+      ) : (
+        <Text style={[getTextStyle(), textStyle]}>{title}</Text>
+      )}
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
+    padding: 16,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: 48,
   },
-  text: {
-    fontWeight: '600',
+  primaryButton: {
+    backgroundColor: '#2196f3',
+  },
+  secondaryButton: {
+    backgroundColor: '#f5f5f5',
+  },
+  outlineButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#2196f3',
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  primaryText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  secondaryText: {
+    color: '#333',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  outlineText: {
+    color: '#2196f3',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 }); 

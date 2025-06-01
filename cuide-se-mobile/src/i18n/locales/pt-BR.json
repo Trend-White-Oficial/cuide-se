@@ -1,0 +1,67 @@
+{
+  "common": {
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "save": "Salvar",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "back": "Voltar",
+    "next": "Próximo",
+    "finish": "Finalizar"
+  },
+  "auth": {
+    "login": "Entrar",
+    "register": "Cadastrar",
+    "email": "E-mail",
+    "password": "Senha",
+    "forgotPassword": "Esqueceu a senha?",
+    "resetPassword": "Redefinir senha",
+    "name": "Nome",
+    "phone": "Telefone"
+  },
+  "appointments": {
+    "title": "Agendamentos",
+    "new": "Novo agendamento",
+    "date": "Data",
+    "time": "Horário",
+    "service": "Serviço",
+    "professional": "Profissional",
+    "status": {
+      "pending": "Pendente",
+      "confirmed": "Confirmado",
+      "completed": "Concluído",
+      "cancelled": "Cancelado"
+    },
+    "actions": {
+      "cancel": "Cancelar agendamento",
+      "confirm": "Confirmar agendamento",
+      "complete": "Concluir agendamento"
+    }
+  },
+  "profile": {
+    "title": "Perfil",
+    "personalInfo": "Informações pessoais",
+    "preferences": "Preferências",
+    "notifications": "Notificações",
+    "language": "Idioma",
+    "theme": "Tema",
+    "logout": "Sair"
+  },
+  "settings": {
+    "title": "Configurações",
+    "notifications": {
+      "title": "Notificações",
+      "appointments": "Lembretes de agendamentos",
+      "promotions": "Promoções e ofertas",
+      "news": "Novidades"
+    },
+    "privacy": {
+      "title": "Privacidade",
+      "dataUsage": "Uso de dados",
+      "location": "Localização"
+    }
+  }
+} 

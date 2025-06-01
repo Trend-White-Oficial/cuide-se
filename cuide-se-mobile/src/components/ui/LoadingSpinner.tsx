@@ -1,43 +1,32 @@
 import React from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
-import { ActivityIndicator, Text, useTheme } from 'react-native-paper';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
 interface LoadingSpinnerProps {
-  message?: string;
-  style?: ViewStyle;
+  size?: 'small' | 'large';
+  color?: string;
+  fullScreen?: boolean;
 }
 
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
-  message,
-  style,
+  size = 'large',
+  color = '#2196f3',
+  fullScreen = false,
 }) => {
-  const theme = useTheme();
-
   return (
-    <View style={[styles.container, style]}>
-      <ActivityIndicator
-        size="large"
-        color={theme.colors.primary}
-      />
-      {message && (
-        <Text style={[styles.message, { color: theme.colors.primary }]}>
-          {message}
-        </Text>
-      )}
+    <View style={[styles.container, fullScreen && styles.fullScreen]}>
+      <ActivityIndicator size={size} color={color} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'center',
+    padding: 16,
     alignItems: 'center',
-    padding: 20,
+    justifyContent: 'center',
   },
-  message: {
-    marginTop: 12,
-    fontSize: 16,
-    textAlign: 'center',
+  fullScreen: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
 }); 

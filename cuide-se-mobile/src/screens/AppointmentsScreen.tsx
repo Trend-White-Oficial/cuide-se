@@ -1,134 +1,183 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, ScrollView, RefreshControl } from 'react-native';
-import { Header } from '../components/ui/Header';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  RefreshControl,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../services/supabase';
+import { AppointmentCard } from '../components/AppointmentCard';
+import { Button } from '../components/ui/Button';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { ErrorMessage } from '../components/ui/ErrorMessage';
-import { EmptyState } from '../components/ui/EmptyState';
-import { Button } from '../components/ui/Button';
-import { useNavigation } from '@react-navigation/native';
-import { supabase } from '../services/supabase';
-import { Appointment } from '../types';
+
+interface Appointment {
+  id: string;
+  date: string;
+  time: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  service: {
+    name: string;
+    duration: number;
+  };
+  professional: {
+    name: string;
+  };
+}
 
 export const AppointmentsScreen: React.FC = () => {
   const navigation = useNavigation();
+  const { user } = useAuth();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
+    if (!user?.id) return;
+
     try {
+      setLoading(true);
       setError(null);
-      const { data, error: fetchError } = await supabase
+
+      const { data, error } = await supabase
         .from('appointments')
         .select(`
           *,
-          professional:professionals(*),
-          service:services(*)
+          service:services(name, duration),
+          professional:professionals(name)
         `)
+        .eq('client_id', user.id)
         .order('date', { ascending: true });
 
-      if (fetchError) throw fetchError;
+      if (error) throw error;
       setAppointments(data || []);
-    } catch (err) {
-      setError('Erro ao carregar agendamentos.');
-      console.error(err);
+    } catch (error) {
+      console.error('Erro ao buscar agendamentos:', error);
+      setError('Não foi possível carregar seus agendamentos.');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
-
-  const handleCancel = async (appointmentId: string) => {
-    try {
-      setError(null);
-      const { error: cancelError } = await supabase
-        .from('appointments')
-        .delete()
-        .eq('id', appointmentId);
-
-      if (cancelError) throw cancelError;
-      await fetchAppointments();
-    } catch (err) {
-      setError('Erro ao cancelar agendamento.');
-      console.error(err);
-    }
-  };
+  }, [user?.id]);
 
   useEffect(() => {
     fetchAppointments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchAppointments]);
 
-  const onRefresh = () => {
+  const handleRefresh = useCallback(() => {
     setRefreshing(true);
     fetchAppointments();
-  };
+  }, [fetchAppointments]);
 
-  if (loading) {
-    return <LoadingSpinner message="Carregando agendamentos..." />;
-  }
+  const handleCancelAppointment = useCallback(async (appointmentId: string) => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  if (error) {
-    return <ErrorMessage message={error} onRetry={fetchAppointments} />;
-  }
+      const { error } = await supabase
+        .from('appointments')
+        .update({ status: 'cancelled' })
+        .eq('id', appointmentId);
+
+      if (error) throw error;
+
+      await fetchAppointments();
+    } catch (error) {
+      console.error('Erro ao cancelar agendamento:', error);
+      setError('Não foi possível cancelar o agendamento.');
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchAppointments]);
+
+  const handleConfirmAppointment = useCallback(async (appointmentId: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { error } = await supabase
+        .from('appointments')
+        .update({ status: 'confirmed' })
+        .eq('id', appointmentId);
+
+      if (error) throw error;
+
+      await fetchAppointments();
+    } catch (error) {
+      console.error('Erro ao confirmar agendamento:', error);
+      setError('Não foi possível confirmar o agendamento.');
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchAppointments]);
+
+  const handleCompleteAppointment = useCallback(async (appointmentId: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { error } = await supabase
+        .from('appointments')
+        .update({ status: 'completed' })
+        .eq('id', appointmentId);
+
+      if (error) throw error;
+
+      await fetchAppointments();
+    } catch (error) {
+      console.error('Erro ao concluir agendamento:', error);
+      setError('Não foi possível concluir o agendamento.');
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchAppointments]);
+
+  const renderItem = useCallback(({ item }: { item: Appointment }) => (
+    <AppointmentCard
+      appointment={item}
+      onCancel={() => handleCancelAppointment(item.id)}
+      onConfirm={() => handleConfirmAppointment(item.id)}
+      onComplete={() => handleCompleteAppointment(item.id)}
+    />
+  ), [handleCancelAppointment, handleConfirmAppointment, handleCompleteAppointment]);
+
+  const keyExtractor = useCallback((item: Appointment) => item.id, []);
+
+  if (loading && !refreshing) return <LoadingSpinner fullScreen />;
+  if (error) return <ErrorMessage message={error} onRetry={fetchAppointments} />;
 
   return (
     <View style={styles.container}>
-      <Header title="Meus Agendamentos" />
-      <ScrollView
-        style={styles.content}
+      <View style={styles.header}>
+        <Text style={styles.title}>Meus Agendamentos</Text>
+        <Button
+          title="Novo Agendamento"
+          onPress={() => navigation.navigate('CreateAppointment' as never)}
+          style={styles.newButton}
+        />
+      </View>
+
+      <FlatList
+        data={appointments}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        contentContainerStyle={styles.list}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
-      >
-        {appointments.length > 0 ? (
-          appointments.map(appointment => (
-            <View key={appointment.id} style={styles.appointmentCard}>
-              <View style={styles.appointmentInfo}>
-                <Header
-                  title={appointment.service.name}
-                  showBackButton={false}
-                />
-                <View style={styles.details}>
-                  <View style={styles.detailRow}>
-                    <Header
-                      title={`Profissional: ${appointment.professional.name}`}
-                      showBackButton={false}
-                    />
-                  </View>
-                  <View style={styles.detailRow}>
-                    <Header
-                      title={`Data: ${new Date(appointment.date).toLocaleDateString()}`}
-                      showBackButton={false}
-                    />
-                  </View>
-                  <View style={styles.detailRow}>
-                    <Header
-                      title={`Horário: ${new Date(appointment.time).toLocaleTimeString()}`}
-                      showBackButton={false}
-                    />
-                  </View>
-                </View>
-                {new Date(appointment.date) > new Date() && (
-                  <Button
-                    title="Cancelar Agendamento"
-                    onPress={() => handleCancel(appointment.id)}
-                    variant="outline"
-                    style={styles.cancelButton}
-                  />
-                )}
-              </View>
-            </View>
-          ))
-        ) : (
-          <EmptyState
-            icon="calendar"
-            title="Nenhum agendamento"
-            message="Você ainda não tem agendamentos."
-          />
-        )}
-      </ScrollView>
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>
+            Você não tem agendamentos.
+          </Text>
+        }
+        removeClippedSubviews
+        maxToRenderPerBatch={10}
+        windowSize={5}
+      />
     </View>
   );
 };
@@ -136,27 +185,35 @@ export const AppointmentsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  content: {
-    flex: 1,
-  },
-  appointmentCard: {
-    margin: 16,
-    padding: 16,
     backgroundColor: '#f5f5f5',
-    borderRadius: 8,
   },
-  appointmentInfo: {
-    gap: 8,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#fff',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  details: {
-    marginTop: 8,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
   },
-  detailRow: {
-    marginBottom: 4,
+  newButton: {
+    minWidth: 160,
   },
-  cancelButton: {
-    marginTop: 16,
+  list: {
+    padding: 16,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 32,
   },
 }); 

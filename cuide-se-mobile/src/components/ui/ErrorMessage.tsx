@@ -1,40 +1,22 @@
 import React from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
-import { Text, Button, useTheme } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
 interface ErrorMessageProps {
   message: string;
   onRetry?: () => void;
-  style?: ViewStyle;
 }
 
 export const ErrorMessage: React.FC<ErrorMessageProps> = ({
   message,
   onRetry,
-  style,
 }) => {
-  const theme = useTheme();
-
   return (
-    <View style={[styles.container, style]}>
-      <Icon
-        name="alert-circle-outline"
-        size={48}
-        color={theme.colors.error}
-      />
-      <Text style={[styles.message, { color: theme.colors.error }]}>
-        {message}
-      </Text>
+    <View style={styles.container}>
+      <Text style={styles.message}>{message}</Text>
       {onRetry && (
-        <Button
-          mode="contained"
-          onPress={onRetry}
-          style={styles.button}
-          icon="refresh"
-        >
-          Tentar Novamente
-        </Button>
+        <TouchableOpacity style={styles.button} onPress={onRetry}>
+          <Text style={styles.buttonText}>Tentar Novamente</Text>
+        </TouchableOpacity>
       )}
     </View>
   );
@@ -45,15 +27,23 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 16,
   },
   message: {
-    marginTop: 12,
-    marginBottom: 20,
     fontSize: 16,
+    color: '#f44336',
     textAlign: 'center',
+    marginBottom: 16,
   },
   button: {
-    marginTop: 8,
+    backgroundColor: '#2196f3',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 4,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 }); 
