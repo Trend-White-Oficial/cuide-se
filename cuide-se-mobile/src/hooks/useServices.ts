@@ -11,10 +11,9 @@ interface Service {
   name: string;
   description: string;
   price: number;
-  duration: number;
+  duration: number; // em minutos
   category: string;
-  image?: string;
-  provider_id: string;
+  image_url?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -32,7 +31,7 @@ interface CreateServiceData {
   price: number;
   duration: number;
   category: string;
-  image?: string;
+  image_url?: string;
 }
 
 export const useServices = () => {
@@ -48,26 +47,16 @@ export const useServices = () => {
   const { recordError } = useCrashlytics();
   const { getItem, setItem } = useStorage();
 
-  // Carrega os serviços
+  // Carrega todos os serviços
   const loadServices = useCallback(async (): Promise<void> => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
-
-      // Tenta carregar do cache primeiro
-      const cachedServices = await getItem('@CuideSe:services');
-      if (cachedServices) {
-        setState(prev => ({
-          ...prev,
-          services: cachedServices as Service[],
-          loading: false,
-        }));
-      }
 
       const { data, error } = await supabase
         .from('services')
         .select('*')
         .eq('is_active', true)
-        .order('name', { ascending: true });
+        .order('name');
 
       if (error) {
         throw error;
@@ -78,9 +67,6 @@ export const useServices = () => {
         services: data as Service[],
         loading: false,
       }));
-
-      // Salva no cache
-      await setItem('@CuideSe:services', data);
 
       // Registra o evento
       await logEvent('services_loaded', {
@@ -101,7 +87,7 @@ export const useServices = () => {
         description: 'Tente novamente mais tarde',
       });
     }
-  }, [getItem, setItem, logEvent, showToast, recordError]);
+  }, [logEvent, showToast, recordError]);
 
   // Cria um novo serviço
   const createService = useCallback(
@@ -113,13 +99,7 @@ export const useServices = () => {
 
         const { data: service, error } = await supabase
           .from('services')
-          .insert([
-            {
-              ...data,
-              provider_id: user.id,
-              is_active: true,
-            },
-          ])
+          .insert([{ ...data, is_active: true }])
           .select()
           .single();
 
@@ -141,13 +121,14 @@ export const useServices = () => {
         await logEvent('service_created', {
           user_id: user.id,
           service_id: service.id,
+          name: data.name,
           category: data.category,
         });
 
         showToast({
           type: 'success',
           message: 'Serviço criado',
-          description: 'Seu serviço foi criado com sucesso',
+          description: 'O serviço foi criado com sucesso',
         });
       } catch (error) {
         console.error('Erro ao criar serviço:', error);
@@ -212,7 +193,7 @@ export const useServices = () => {
         showToast({
           type: 'success',
           message: 'Serviço atualizado',
-          description: 'Seu serviço foi atualizado com sucesso',
+          description: 'O serviço foi atualizado com sucesso',
         });
       } catch (error) {
         console.error('Erro ao atualizar serviço:', error);
@@ -270,7 +251,7 @@ export const useServices = () => {
         showToast({
           type: 'success',
           message: 'Serviço desativado',
-          description: 'Seu serviço foi desativado com sucesso',
+          description: 'O serviço foi desativado com sucesso',
         });
       } catch (error) {
         console.error('Erro ao desativar serviço:', error);

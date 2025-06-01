@@ -5,30 +5,40 @@ import {
   Image,
   StyleSheet,
   ViewStyle,
-  ImageStyle,
   TextStyle,
+  ImageSourcePropType,
+  TouchableOpacity,
 } from 'react-native';
-import { THEME_CONFIG } from '../config';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface AvatarProps {
-  source?: string;
+  source?: ImageSourcePropType;
   name?: string;
   size?: number;
+  onPress?: () => void;
   containerStyle?: ViewStyle;
-  imageStyle?: ImageStyle;
+  imageStyle?: ViewStyle;
   textStyle?: TextStyle;
+  showBorder?: boolean;
+  borderColor?: string;
+  borderWidth?: number;
 }
 
 export const Avatar: React.FC<AvatarProps> = ({
   source,
   name,
-  size = 48,
+  size = 40,
+  onPress,
   containerStyle,
   imageStyle,
   textStyle,
+  showBorder = false,
+  borderColor,
+  borderWidth = 2,
 }) => {
-  const getInitials = () => {
-    if (!name) return '';
+  const { colors } = useTheme();
+
+  const getInitials = (name: string) => {
     return name
       .split(' ')
       .map((n) => n[0])
@@ -37,21 +47,27 @@ export const Avatar: React.FC<AvatarProps> = ({
       .slice(0, 2);
   };
 
+  const Container = onPress ? TouchableOpacity : View;
+
   return (
-    <View
+    <Container
       style={[
         styles.container,
         {
           width: size,
           height: size,
           borderRadius: size / 2,
+          backgroundColor: colors.primary,
+          borderColor: borderColor || colors.border,
+          borderWidth: showBorder ? borderWidth : 0,
         },
         containerStyle,
       ]}
+      onPress={onPress}
     >
       {source ? (
         <Image
-          source={{ uri: source }}
+          source={source}
           style={[
             styles.image,
             {
@@ -62,35 +78,35 @@ export const Avatar: React.FC<AvatarProps> = ({
             imageStyle,
           ]}
         />
-      ) : (
+      ) : name ? (
         <Text
           style={[
             styles.text,
             {
+              color: colors.white,
               fontSize: size * 0.4,
             },
             textStyle,
           ]}
         >
-          {getInitials()}
+          {getInitials(name)}
         </Text>
-      )}
-    </View>
+      ) : null}
+    </Container>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: THEME_CONFIG.primaryColor + '20',
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
   },
   image: {
-    resizeMode: 'cover',
+    width: '100%',
+    height: '100%',
   },
   text: {
-    color: THEME_CONFIG.primaryColor,
     fontWeight: '600',
   },
 }); 

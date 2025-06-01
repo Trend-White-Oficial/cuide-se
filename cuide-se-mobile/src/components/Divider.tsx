@@ -4,33 +4,39 @@ import {
   StyleSheet,
   ViewStyle,
 } from 'react-native';
-import { THEME_CONFIG } from '../config';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface DividerProps {
   orientation?: 'horizontal' | 'vertical';
   thickness?: number;
   color?: string;
   spacing?: number;
-  style?: ViewStyle;
+  containerStyle?: ViewStyle;
 }
 
 export const Divider: React.FC<DividerProps> = ({
   orientation = 'horizontal',
   thickness = 1,
-  color = THEME_CONFIG.textColor + '20',
-  spacing = 16,
-  style,
+  color,
+  spacing = 8,
+  containerStyle,
 }) => {
+  const { colors } = useTheme();
+
+  const isHorizontal = orientation === 'horizontal';
+
   return (
     <View
       style={[
         styles.container,
         {
-          backgroundColor: color,
-          [orientation === 'horizontal' ? 'height' : 'width']: thickness,
-          [orientation === 'horizontal' ? 'marginVertical' : 'marginHorizontal']: spacing,
+          backgroundColor: color || colors.border,
+          height: isHorizontal ? thickness : '100%',
+          width: isHorizontal ? '100%' : thickness,
+          marginVertical: isHorizontal ? spacing : 0,
+          marginHorizontal: isHorizontal ? 0 : spacing,
         },
-        style,
+        containerStyle,
       ]}
     />
   );
@@ -38,6 +44,6 @@ export const Divider: React.FC<DividerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    alignSelf: 'stretch',
   },
 }); 
