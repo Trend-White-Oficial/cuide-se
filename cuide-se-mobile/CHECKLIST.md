@@ -9,7 +9,7 @@
 - [x] Configuração do Jest
 - [x] Configuração do React Native Testing Library
 
-## Hooks
+## Hooks ✅
 - [x] useTranslation
 - [x] useQueryCache
 - [x] useNotifications
