@@ -1,60 +1,151 @@
 import React from 'react';
 import {
   View,
+  Text,
+  TouchableOpacity,
   StyleSheet,
   ViewStyle,
-  TouchableOpacity,
-  TouchableOpacityProps,
+  TextStyle,
+  Image,
+  ImageSourcePropType,
 } from 'react-native';
-import { THEME_CONFIG } from '../config';
+import { useTheme } from '../contexts/ThemeContext';
 
-interface CardProps extends TouchableOpacityProps {
-  children: React.ReactNode;
-  style?: ViewStyle;
+interface CardProps {
+  title?: string;
+  subtitle?: string;
+  image?: ImageSourcePropType;
   onPress?: () => void;
-  variant?: 'default' | 'elevated';
+  children?: React.ReactNode;
+  containerStyle?: ViewStyle;
+  titleStyle?: TextStyle;
+  subtitleStyle?: TextStyle;
+  imageStyle?: ViewStyle;
+  contentStyle?: ViewStyle;
+  footer?: React.ReactNode;
+  footerStyle?: ViewStyle;
+  elevation?: number;
+  border?: boolean;
 }
 
 export const Card: React.FC<CardProps> = ({
-  children,
-  style,
+  title,
+  subtitle,
+  image,
   onPress,
-  variant = 'default',
-  ...props
+  children,
+  containerStyle,
+  titleStyle,
+  subtitleStyle,
+  imageStyle,
+  contentStyle,
+  footer,
+  footerStyle,
+  elevation = 2,
+  border = true,
 }) => {
+  const { colors } = useTheme();
+
   const Container = onPress ? TouchableOpacity : View;
 
   return (
     <Container
       style={[
         styles.container,
-        variant === 'elevated' && styles.elevated,
-        style,
+        {
+          backgroundColor: colors.card,
+          borderColor: border ? colors.border : 'transparent',
+          shadowColor: colors.shadow,
+          elevation,
+        },
+        containerStyle,
       ]}
       onPress={onPress}
-      {...props}
     >
-      {children}
+      {image && (
+        <Image
+          source={image}
+          style={[styles.image, imageStyle]}
+          resizeMode="cover"
+        />
+      )}
+      <View style={[styles.content, contentStyle]}>
+        {title && (
+          <Text
+            style={[
+              styles.title,
+              {
+                color: colors.text,
+              },
+              titleStyle,
+            ]}
+          >
+            {title}
+          </Text>
+        )}
+        {subtitle && (
+          <Text
+            style={[
+              styles.subtitle,
+              {
+                color: colors.textSecondary,
+              },
+              subtitleStyle,
+            ]}
+          >
+            {subtitle}
+          </Text>
+        )}
+        {children}
+      </View>
+      {footer && (
+        <View
+          style={[
+            styles.footer,
+            {
+              borderTopColor: colors.border,
+            },
+            footerStyle,
+          ]}
+        >
+          {footer}
+        </View>
+      )}
     </Container>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: THEME_CONFIG.backgroundColor,
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: THEME_CONFIG.textColor + '20',
-  },
-  elevated: {
-    shadowColor: THEME_CONFIG.textColor,
+    overflow: 'hidden',
+    marginBottom: 16,
     shadowOffset: {
       width: 0,
       height: 2,
     },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+  },
+  image: {
+    width: '100%',
+    height: 200,
+  },
+  content: {
+    padding: 16,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  footer: {
+    borderTopWidth: 1,
+    padding: 16,
   },
 }); 

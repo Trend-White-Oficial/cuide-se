@@ -7,35 +7,74 @@ import {
   TextStyle,
   TouchableOpacity,
 } from 'react-native';
-import { THEME_CONFIG } from '../config';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ErrorMessageProps {
   message: string;
   onRetry?: () => void;
   containerStyle?: ViewStyle;
-  textStyle?: TextStyle;
-  retryText?: string;
+  messageStyle?: TextStyle;
+  retryButtonStyle?: ViewStyle;
+  retryButtonTextStyle?: TextStyle;
+  retryButtonText?: string;
+  icon?: React.ReactNode;
 }
 
 export const ErrorMessage: React.FC<ErrorMessageProps> = ({
   message,
   onRetry,
   containerStyle,
-  textStyle,
-  retryText = 'Tentar novamente',
+  messageStyle,
+  retryButtonStyle,
+  retryButtonTextStyle,
+  retryButtonText = 'Tentar novamente',
+  icon,
 }) => {
+  const { colors } = useTheme();
+
   return (
-    <View style={[styles.container, containerStyle]}>
-      <Text style={[styles.message, textStyle]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.errorBackground,
+        },
+        containerStyle,
+      ]}
+    >
+      {icon}
+      <Text
+        style={[
+          styles.message,
+          {
+            color: colors.error,
+          },
+          messageStyle,
+        ]}
+      >
         {message}
       </Text>
       {onRetry && (
         <TouchableOpacity
+          style={[
+            styles.retryButton,
+            {
+              backgroundColor: colors.error,
+            },
+            retryButtonStyle,
+          ]}
           onPress={onRetry}
-          style={styles.retryButton}
         >
-          <Text style={styles.retryText}>
-            {retryText}
+          <Text
+            style={[
+              styles.retryButtonText,
+              {
+                color: colors.white,
+              },
+              retryButtonTextStyle,
+            ]}
+          >
+            {retryButtonText}
           </Text>
         </TouchableOpacity>
       )}
@@ -46,23 +85,24 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
 const styles = StyleSheet.create({
   container: {
     padding: 16,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    marginVertical: 8,
   },
   message: {
-    color: THEME_CONFIG.errorColor,
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 16,
   },
   retryButton: {
-    paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 8,
-    backgroundColor: THEME_CONFIG.primaryColor,
+    paddingVertical: 8,
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  retryText: {
-    color: '#FFFFFF',
+  retryButtonText: {
     fontSize: 14,
     fontWeight: '600',
   },
