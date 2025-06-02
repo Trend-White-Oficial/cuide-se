@@ -1,0 +1,54 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Funções auxiliares
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Regras para avatares de usuários
+    match /avatars/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    // Regras para fotos de serviços
+    match /services/{serviceId}/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Regras para fotos de profissionais
+    match /professionals/{professionalId}/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Regras para fotos de avaliações
+    match /reviews/{reviewId}/{fileName} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // Regras para documentos
+    match /documents/{userId}/{fileName} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    // Regras para backups
+    match /backups/{fileName} {
+      allow read, write: if isAdmin();
+    }
+  }
+} 

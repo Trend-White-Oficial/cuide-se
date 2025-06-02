@@ -1,0 +1,101 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: disaster-recovery-config
+  namespace: production
+data:
+  backup-schedule: "0 0 * * *"  # Diário à meia-noite
+  retention-days: "30"
+  backup-location: "gs://cuide-se-backups"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: database-backup
+  namespace: production
+spec:
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: google/cloud-sdk:latest
+            command:
+            - /bin/sh
+            - -c
+            - |
+              gcloud auth activate-service-account --key-file=/etc/secrets/backup-key.json
+              gsutil cp /backup/database.sql gs://cuide-se-backups/$(date +%Y%m%d)/database.sql
+            volumeMounts:
+            - name: backup-key
+              mountPath: /etc/secrets
+              readOnly: true
+            - name: backup-volume
+              mountPath: /backup
+          volumes:
+          - name: backup-key
+            secret:
+              secretName: backup-service-account
+          - name: backup-volume
+            persistentVolumeClaim:
+              claimName: backup-pvc
+          restartPolicy: OnFailure
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-pvc
+  namespace: production
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup-cleanup
+  namespace: production
+spec:
+  schedule: "0 1 * * *"  # 1 hora após o backup
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: cleanup
+            image: google/cloud-sdk:latest
+            command:
+            - /bin/sh
+            - -c
+            - |
+              gcloud auth activate-service-account --key-file=/etc/secrets/backup-key.json
+              gsutil ls gs://cuide-se-backups/ | sort -r | tail -n +31 | xargs -I {} gsutil rm -r {}
+            volumeMounts:
+            - name: backup-key
+              mountPath: /etc/secrets
+              readOnly: true
+          volumes:
+          - name: backup-key
+            secret:
+              secretName: backup-service-account
+          restartPolicy: OnFailure
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: recovery-procedures
+  namespace: production
+data:
+  recovery-steps: |
+    1. Verificar integridade do backup
+    2. Restaurar banco de dados
+    3. Verificar consistência dos dados
+    4. Atualizar configurações de DNS
+    5. Verificar conectividade
+    6. Executar testes de integração
+    7. Monitorar métricas 
