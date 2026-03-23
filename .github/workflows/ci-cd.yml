@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ PROTECT ]
   pull_request:
-    branches: [ main ]
+    branches: [ PROTECT ]
 
 env:
   NODE_VERSION: '18.x'
